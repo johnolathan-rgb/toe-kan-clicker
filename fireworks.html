@@ -41,6 +41,14 @@
     border-color: #fff;
     box-shadow: 0 0 8px rgba(255,255,255,0.4);
   }
+  #hud-blur-toggle{
+    position:fixed;top:50px;right:14px;z-index:25;
+    font-family:'Courier New',monospace;font-size:11px;font-weight:900;
+    border:1px solid rgba(255,255,255,.18);border-radius:8px;
+    padding:7px 10px;color:#fff;background:rgba(0,0,0,.42);
+    cursor:pointer;backdrop-filter:blur(8px)
+  }
+  #hud-blur-toggle:hover{background:rgba(0,0,0,.58)}
   #app-actions{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:24;
     display:flex;gap:8px;background:rgba(6,14,28,.48);backdrop-filter:blur(8px);
     border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:6px}
@@ -87,14 +95,16 @@
   #hud{position:fixed;left:0;right:0;bottom:0;z-index:12;
     display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,32vw);align-items:end;gap:18px;
     padding:10px 16px 12px;
-    background:rgba(0,0,0,.35);backdrop-filter:blur(10px);
+    background:rgba(0,0,0,.35);
     border-top:1px solid rgba(255,255,255,.08);pointer-events:none;
     font-family:'Courier New',monospace;color:#fff}
+  #hud.hud-blur-on{backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+  #hud.hud-blur-off{backdrop-filter:none;-webkit-backdrop-filter:none}
   #hud .hud-main{min-width:0}
   #hud .hud-side{display:flex;flex-direction:column;gap:6px;min-width:0}
   #hud .hud-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
-  #hud .big{font-size:clamp(42px,7vw,88px);font-weight:900;letter-spacing:0;
-    color:#fff;text-shadow:0 1px 0 rgba(0,0,0,.5);line-height:.92}
+  #hud .big{font-size:clamp(56px,8vw,110px);font-weight:900;letter-spacing:0;
+    color:#fff;text-shadow:none;line-height:.92}
   #hud .sub{font-size:13px;color:rgba(255,255,255,.85);opacity:1;font-weight:700;line-height:1.25}
   #hud .label{font-size:10px;color:rgba(255,255,255,.66);letter-spacing:2px;text-transform:uppercase;font-weight:800}
   #hud #last-click-gain{color:rgba(255,255,255,.88);font-weight:800;opacity:.5;transition:opacity .25s ease}
@@ -109,6 +119,19 @@
   #prestige-status{color:#55317a}
   .stat-flash{animation:statFlash .24s ease}
   @keyframes statFlash{0%{transform:scale(1);filter:brightness(1)}50%{transform:scale(1.055);filter:brightness(1.35) saturate(1.18)}100%{transform:scale(1);filter:brightness(1)}}
+  #farm-view{position:fixed;right:12px;bottom:calc(clamp(56px,8vw,110px) + 72px);z-index:11;
+    width:220px;height:220px;padding:12px;border-radius:12px;
+    background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.12);
+    color:rgba(255,255,255,.88);font-family:'Courier New',monospace;
+    backdrop-filter:blur(8px);box-shadow:0 10px 24px rgba(0,0,0,.22);pointer-events:none}
+  #farm-view .farm-view-title{font-size:10px;font-weight:900;letter-spacing:1.7px;text-transform:uppercase;
+    color:rgba(255,255,255,.66);margin-bottom:8px}
+  #farm-view .farm-view-scene{height:172px;display:grid;grid-template-columns:repeat(4,1fr);
+    grid-auto-rows:1fr;gap:7px;align-items:center;justify-items:center}
+  #farm-view .farm-view-cell{width:38px;height:38px;display:flex;align-items:center;justify-content:center;
+    border-radius:9px;background:rgba(60,140,70,.18);font-size:23px}
+  #farm-view .farm-empty{height:172px;display:flex;align-items:center;justify-content:center;
+    border-radius:10px;background:rgba(60,140,70,.18);font-size:18px;font-weight:900;color:rgba(255,255,255,.82)}
   #upgrades-panel{position:fixed;right:12px;top:64px;bottom:12px;width:316px;z-index:10;
     background:linear-gradient(145deg,rgba(210,242,255,.9),rgba(255,236,201,.84) 54%,rgba(229,215,255,.88));
     backdrop-filter:blur(12px);border-radius:12px;border:1px solid rgba(255,255,255,.58);
@@ -208,6 +231,7 @@
 <body>
 
 <div id="theme-switcher"></div>
+<button id="hud-blur-toggle" type="button">Blur: ON</button>
 <div id="app-actions">
   <button class="ui-btn primary" id="btn-start">Start</button>
   <button class="ui-btn" id="btn-save">Save</button>
@@ -840,6 +864,35 @@ function renderLevelList() {
     if (unlocked) card.addEventListener('click', function() { selectGameLevel(level.key); });
     list.appendChild(card);
   });
+}
+
+function getHudBlurEnabled() {
+  try {
+    return localStorage.getItem('toekan_hud_blur') !== 'false';
+  } catch(e) {
+    return true;
+  }
+}
+
+function applyHudBlurPreference() {
+  var enabled = getHudBlurEnabled();
+  var hud = document.getElementById('hud');
+  var btn = document.getElementById('hud-blur-toggle');
+  if (hud) {
+    hud.classList.toggle('hud-blur-on', enabled);
+    hud.classList.toggle('hud-blur-off', !enabled);
+  }
+  if (btn) btn.textContent = enabled ? 'Blur: ON' : 'Blur: OFF';
+}
+
+function toggleHudBlur() {
+  var next = !getHudBlurEnabled();
+  try {
+    localStorage.setItem('toekan_hud_blur', next ? 'true' : 'false');
+  } catch(e) {
+    console.warn('HUD blur preference failed', e);
+  }
+  applyHudBlurPreference();
 }
 
 function showHomeScreen() {
@@ -1527,6 +1580,59 @@ function updateHUD() {
     " · " + (save.totalPrestiges || 0) + " done";
   var fd = document.getElementById("feather-display");
   if (fd) fd.textContent = "🪶 Golden Feathers: " + (save.goldenFeathers || 0);
+  renderFarmView();
+}
+
+function renderFarmView() {
+  var panel = document.getElementById("farm-view");
+  if (!panel) return;
+  var counts = (save && save.farms) || {};
+  var items = [];
+  var farmScene = [
+    { key:'chicken', emoji:'🐣', max:2 },
+    { key:'cow', emoji:'🐄', max:1 },
+    { key:'crop', emoji:'🌽', max:1 },
+    { key:'barn', emoji:'🏠', max:1 },
+    { key:'garden', emoji:'🌺', max:1 },
+    { key:'orchard', emoji:'🥭', max:1 },
+    { key:'pond', emoji:'🐸', max:1 },
+    { key:'mill', emoji:'🌬️', max:1 },
+    { key:'temple', emoji:'🏯', max:1 },
+    { key:'ranch', emoji:'🐂', max:1 },
+    { key:'arena', emoji:'🎪', max:1 },
+    { key:'kingdom', emoji:'👑', max:1 }
+  ];
+
+  farmScene.forEach(function(item) {
+    var owned = counts[item.key] || 0;
+    if (owned <= 0) return;
+    var repeats = item.key === 'chicken' ? Math.min(2, owned) : 1;
+    for (var i = 0; i < repeats; i++) items.push(item.emoji);
+  });
+
+  panel.replaceChildren();
+  var title = document.createElement("div");
+  title.className = "farm-view-title";
+  title.textContent = "Farm View";
+  panel.appendChild(title);
+
+  if (items.length === 0) {
+    var empty = document.createElement("div");
+    empty.className = "farm-empty";
+    empty.textContent = "🌱 Empty Plot";
+    panel.appendChild(empty);
+    return;
+  }
+
+  var scene = document.createElement("div");
+  scene.className = "farm-view-scene";
+  items.slice(0, 16).forEach(function(emoji) {
+    var cell = document.createElement("div");
+    cell.className = "farm-view-cell";
+    cell.textContent = emoji;
+    scene.appendChild(cell);
+  });
+  panel.appendChild(scene);
 }
 
 function drawFarm() {
@@ -1772,6 +1878,7 @@ window.addEventListener('DOMContentLoaded', function() {
   const homeLoad = document.getElementById('home-load');
   const homeQuit = document.getElementById('home-quit');
   const btnReset = document.getElementById('btn-reset-save');
+  const hudBlurToggle = document.getElementById('hud-blur-toggle');
   if (btnStart) btnStart.onclick = showHomeScreen;
   if (homeContinue) homeContinue.onclick = continueCurrentSlot;
   if (homeNew) homeNew.onclick = function() { startNewGameInSlot(selectedSlot); };
@@ -1780,6 +1887,8 @@ window.addEventListener('DOMContentLoaded', function() {
   if (btnQuit) btnQuit.onclick = quitGame;
   if (homeQuit) homeQuit.onclick = quitGame;
   if (btnReset) btnReset.onclick = resetCurrentSave;
+  if (hudBlurToggle) hudBlurToggle.onclick = toggleHudBlur;
+  applyHudBlurPreference();
   if (btnPrestige) btnPrestige.onclick = () => {
     if (typeof canPrestige === 'function' && canPrestige(save)) {
       if (typeof prestigeReset === 'function') prestigeReset();
@@ -1801,7 +1910,7 @@ window.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <!-- Game UI Panels -->
-<div id="hud">
+<div id="hud" class="hud-blur-on">
   <div class="hud-main">
     <div class="label">YOUR TOE-KANS</div>
     <div class="big" id="toe-count">0</div>
@@ -1820,6 +1929,10 @@ window.addEventListener('DOMContentLoaded', function() {
     </div>
     <div class="sub" id="game-level-status">World: Starter Garden · 0% click bonus</div>
   </div>
+</div>
+<div id="farm-view">
+  <div class="farm-view-title">Farm View</div>
+  <div class="farm-empty">🌱 Empty Plot</div>
 </div>
 <div id="upgrades-panel">
   <div id="upgrades-header">🛖 FARMS</div>
