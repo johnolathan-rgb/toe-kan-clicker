@@ -1,0 +1,43 @@
+{
+  "name": "toekan-clicker",
+  "version": "0.1.0-alpha.1",
+  "description": "Toe-Kan Clicker alpha desktop build.",
+  "main": "main.js",
+  "private": true,
+  "author": "Toe-Kan Clicker",
+  "license": "UNLICENSED",
+  "scripts": {
+    "start": "env -u ELECTRON_RUN_AS_NODE electron .",
+    "check": "node scripts/check.js",
+    "pack": "electron-builder --dir",
+    "dist:linux": "electron-builder --linux dir",
+    "dist:appimage": "electron-builder --linux AppImage",
+    "dist:steam-linux": "npm run check && electron-builder --linux dir"
+  },
+  "build": {
+    "appId": "com.toekan.clicker",
+    "productName": "Toe-Kan Clicker",
+    "copyright": "Copyright © 2026 Toe-Kan Clicker",
+    "asar": true,
+    "files": [
+      "main.js",
+      "preload.js",
+      "fireworks.html",
+      "package.json"
+    ],
+    "directories": {
+      "output": "dist"
+    },
+    "linux": {
+      "category": "Game",
+      "target": [
+        "dir",
+        "AppImage"
+      ]
+    }
+  },
+  "devDependencies": {
+    "electron": "^40.10.3",
+    "electron-builder": "^26.0.12"
+  }
+}
