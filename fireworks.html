@@ -135,18 +135,21 @@
     background:linear-gradient(180deg,rgba(70,135,64,.92),rgba(45,110,40,.96));opacity:.92;pointer-events:none}
   #farm-landscape .farm-animal-layer{position:absolute;left:0;right:0;bottom:0;z-index:3;
     width:100%;height:52px;pointer-events:none;image-rendering:pixelated}
-  #farm-landscape .farm-landscape-track{position:relative;z-index:2;display:flex;align-items:flex-end;gap:10px;
-    height:98px;overflow-x:auto;overflow-y:hidden;padding:2px 2px 42px}
-  #farm-landscape .farm-landscape-track::-webkit-scrollbar{height:4px}
-  #farm-landscape .farm-landscape-track::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:999px}
-  #farm-landscape .farm-tree{position:relative;z-index:2;height:100%}
+  #farm-landscape .farm-tree{position:relative;z-index:2;height:100%;display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:12px;padding-bottom:42px}
+  #farm-landscape .farm-zone{position:relative;min-width:0;overflow:hidden}
+  #farm-landscape .farm-zone-label{font-size:9px;font-weight:900;letter-spacing:1.4px;text-transform:uppercase;color:rgba(255,255,255,.68);margin-bottom:5px}
+  #farm-landscape .farm-zone-track{position:relative;display:flex;align-items:flex-end;gap:10px;overflow-x:auto;overflow-y:hidden;padding:2px 2px 6px;scrollbar-width:thin}
+  #farm-landscape .farm-zone-track::-webkit-scrollbar{height:4px}
+  #farm-landscape .farm-zone-track::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:999px}
+  #farm-landscape .farm-buildings-track{height:76px}
+  #farm-landscape .farm-animals-track{height:76px}
   #farm-landscape .farm-branch-layer{display:none}
   #farm-landscape .farm-tier-row{display:contents}
-  #farm-landscape .farm-node{position:relative;flex:0 0 auto;min-width:86px;max-width:104px;height:80px;
-    display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;
+  #farm-landscape .farm-node{position:relative;flex:0 0 auto;min-width:86px;max-width:104px;height:68px;
+    display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:3px;
     padding:7px 8px 6px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
     cursor:pointer;transition:transform .12s ease,background .12s ease,border-color .12s ease,box-shadow .12s ease,opacity .12s ease,filter .12s ease}
-  #farm-landscape .farm-node:not(.locked):hover{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.16)}
+  #farm-landscape .farm-node:hover{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.18)}
   #farm-landscape .farm-node:active{transform:scale(.98)}
   #farm-landscape .farm-node.buy-flash{animation:buyFlash .28s ease}
   @keyframes buyFlash{0%{transform:scale(1);border-color:rgba(100,255,180,.22)}55%{transform:scale(1.07);border-color:rgba(100,255,180,.9);background:rgba(100,255,180,.18)}100%{transform:scale(1);border-color:rgba(100,255,180,.22)}}
@@ -158,7 +161,6 @@
   #farm-landscape .farm-node.owned{background:rgba(100,255,180,.12);border-color:rgba(100,255,180,.5);box-shadow:0 0 0 1px rgba(100,255,180,.18) inset}
   #farm-landscape .farm-node.owned .owned-mark{opacity:1}
   #farm-landscape .farm-node.available:not(.owned){border-color:rgba(255,211,106,.36);box-shadow:0 0 14px rgba(255,211,106,.14)}
-  #farm-landscape .farm-node.locked{opacity:.42;filter:grayscale(.85) saturate(.55);cursor:pointer}
   #farm-landscape .farm-node.coop-building{box-shadow:0 0 0 1px rgba(100,255,180,.18) inset}
   #farm-landscape .farm-node .farm-sprite-preview{width:32px;height:28px;image-rendering:pixelated}
   #farm-landscape .farm-tooltip{position:absolute;z-index:4;min-width:172px;max-width:220px;padding:10px;
@@ -173,28 +175,29 @@
   #farm-landscape .farm-tooltip button:hover{background:rgba(255,255,255,.18)}
   #farm-landscape .farm-tooltip button.buy-flash{animation:buyFlash .22s ease}
   #farm-landscape .farm-tooltip .tt-close{margin-left:auto}
-  #farm-landscape.farm-expanded{bottom:calc(var(--hud-height, 130px) + 16px);height:min(430px,calc(100vh - var(--hud-height, 130px) - 42px));padding:11px 14px 12px}
-  #farm-landscape.farm-expanded .farm-tree{height:calc(100% - 18px);padding-bottom:58px}
-  #farm-landscape.farm-expanded .farm-landscape-track{height:100%;display:grid;grid-template-rows:repeat(4,minmax(62px,1fr));gap:12px;overflow:visible;padding:4px 8px 68px}
-  #farm-landscape.farm-expanded .farm-tier-row{position:relative;display:flex;align-items:center;justify-content:center;gap:clamp(12px,4vw,46px);min-height:62px}
-  #farm-landscape.farm-expanded .farm-tier-1{grid-row:4}
+  #farm-landscape.farm-expanded{bottom:calc(var(--hud-height, 130px) + 16px);height:min(480px,72vh);padding:12px 16px 14px}
+  #farm-landscape.farm-expanded .farm-tree{height:calc(100% - 18px);display:grid;grid-template-rows:minmax(0,1fr) 126px;grid-template-columns:1fr;gap:14px;padding-bottom:68px}
+  #farm-landscape.farm-expanded .farm-zone{overflow:visible}
+  #farm-landscape.farm-expanded .farm-zone-label{font-size:10px;margin-bottom:8px}
+  #farm-landscape.farm-expanded .farm-buildings-track{height:100%;display:grid;grid-template-rows:repeat(3,minmax(96px,1fr));gap:24px;overflow:visible;padding:4px 8px 0}
+  #farm-landscape.farm-expanded .farm-animals-track{height:106px;justify-content:center;gap:24px;overflow-x:auto;padding:0 8px 8px}
+  #farm-landscape.farm-expanded .farm-tier-row{position:relative;display:flex;align-items:center;justify-content:center;gap:24px;min-height:96px}
   #farm-landscape.farm-expanded .farm-tier-2{grid-row:3}
   #farm-landscape.farm-expanded .farm-tier-3{grid-row:2}
   #farm-landscape.farm-expanded .farm-tier-4{grid-row:1}
-  #farm-landscape.farm-expanded .farm-node{width:min(126px,17vw);min-width:88px;max-width:132px;height:62px;justify-content:center;padding:7px 8px 6px}
-  #farm-landscape.farm-expanded .farm-node .emoji{font-size:22px}
-  #farm-landscape.farm-expanded .farm-node .farm-sprite-preview{width:28px;height:25px}
-  #farm-landscape.farm-expanded .farm-node .count{font-size:10px}
+  #farm-landscape.farm-expanded .farm-node{min-width:110px;max-width:130px;width:clamp(110px,13vw,130px);height:96px;justify-content:center;padding:9px 10px 8px;gap:5px}
+  #farm-landscape.farm-expanded .farm-node .emoji{font-size:36px}
+  #farm-landscape.farm-expanded .farm-node .farm-sprite-preview{width:34px;height:30px}
+  #farm-landscape.farm-expanded .farm-node .label{font-size:12px}
+  #farm-landscape.farm-expanded .farm-node .count{font-size:12px}
   #farm-landscape.farm-expanded .farm-node .bonus,#farm-landscape.farm-expanded .farm-node .tier-badge{display:block}
-  #farm-landscape.farm-expanded .farm-branch-layer{display:block;position:absolute;left:8px;right:8px;top:4px;bottom:64px;z-index:1;pointer-events:none}
-  #farm-landscape .farm-branch{position:absolute;height:2px;transform-origin:0 50%;border-radius:999px;background:linear-gradient(90deg,rgba(255,255,255,.12),rgba(100,255,180,.34),rgba(255,255,255,.12));opacity:.65}
-  #farm-landscape .farm-branch.locked{background:rgba(255,255,255,.12);opacity:.28}
-  #farm-landscape .farm-branch.owned{background:linear-gradient(90deg,rgba(100,255,180,.2),rgba(100,255,180,.7),rgba(100,255,180,.2));opacity:.9}
+  #farm-landscape.farm-expanded .farm-branch-layer{display:block;position:absolute;left:8px;right:8px;top:20px;bottom:0;z-index:1;pointer-events:none}
+  #farm-landscape .farm-branch{position:absolute;height:4px;transform-origin:0 50%;border-radius:999px;background:linear-gradient(90deg,rgba(255,255,255,.5),rgba(100,255,180,.95),rgba(255,255,255,.5));box-shadow:0 0 10px rgba(100,255,180,.34);opacity:.95}
+  #farm-landscape .farm-branch.owned{background:linear-gradient(90deg,rgba(255,255,255,.72),rgba(100,255,180,1),rgba(255,255,255,.72));box-shadow:0 0 14px rgba(100,255,180,.48)}
   #farm-landscape.farm-expanded .farm-animal-layer{height:64px}
   #farm-landscape.farm-expanded .farm-ground{height:58px}
   #farm-landscape.farm-tab-active{filter:brightness(1.08)}
   #farm-landscape{transition:height .18s ease,bottom .18s ease,opacity .18s ease}
-  #farm-view,#upgrades-panel,#upgrades-header,#upgrade-list,#farm-grid{display:none !important}
 .toast{position:fixed;top:56px;left:50%;transform:translateX(-50%);z-index:30;
     padding:8px 18px;border-radius:8px;font-size:12px;font-weight:700;
     font-family:'Courier New',monospace;
@@ -1607,6 +1610,8 @@ function toggleFarmLandscape() {
   if (!panel) return;
   panel.classList.toggle('farm-expanded');
   panel.classList.add('farm-tab-active');
+  farmLandscapeState = '';
+  renderFarmView();
   requestAnimationFrame(updateFarmBranches);
   setTimeout(function() {
     if (panel) panel.classList.remove('farm-tab-active');
@@ -1696,17 +1701,17 @@ const FARM_TIERS = {
   pond:3, mill:3, temple:3,
   ranch:4, horse:4, arena:4, kingdom:4
 };
-const FARM_TREE_ROWS = [
-  ['ranch','arena','kingdom'],
+const FARM_BUILDING_ROWS = [
+  ['arena','kingdom'],
   ['pond','mill','temple'],
-  ['barn','garden','orchard'],
-  ['chicken','cow','pig','sheep','dog']
+  ['barn','garden','orchard']
 ];
-const FARM_TREE_KEYS = FARM_TREE_ROWS.reduce(function(all, row) { return all.concat(row); }, []);
+const FARM_BUILDING_KEYS = FARM_BUILDING_ROWS.reduce(function(all, row) { return all.concat(row); }, []);
+const FARM_ANIMAL_KEYS = ['chicken','cow','pig','sheep','dog','horse','ranch'];
+const FARM_TREE_KEYS = FARM_BUILDING_KEYS.concat(FARM_ANIMAL_KEYS);
 const FARM_TREE_BRANCHES = [
-  ['ranch','pond'], ['arena','mill'], ['kingdom','temple'],
-  ['pond','barn'], ['mill','garden'], ['temple','orchard'],
-  ['barn','chicken'], ['barn','cow'], ['garden','pig'], ['garden','sheep'], ['orchard','dog']
+  ['arena','mill'], ['kingdom','temple'],
+  ['pond','barn'], ['mill','garden'], ['temple','orchard']
 ];
 const COW_PER_SEC_BONUS = 0.1;
 const PIG_CLICK_BONUS = 0.05;
@@ -1821,12 +1826,6 @@ function buyFarm(idx) {
   saveGame();
   var col = THEMES[currentTheme].particleColors[Math.floor(Math.random() * 8)];
   spawnBurst(window.innerWidth - 200, 300 + Math.random() * 200, col);
-  setTimeout(function() {
-    var tiles = document.querySelectorAll('.farm-tile');
-    tiles.forEach(function(tile) {
-      tile.classList.remove('farm-pop');
-    });
-  }, 200);
 }
 
 function updateHUD() {
@@ -2077,18 +2076,28 @@ function getFarmIconMarkup(item, owned) {
     : '<div class="emoji">' + getFarmNodeEmoji(item.key, owned || 0) + '</div>';
 }
 
-function getFarmTreeScene() {
-  return FARM_TREE_KEYS.map(function(key) {
+function isFarmVisibleInLandscape(item) {
+  if (!item) return false;
+  var owned = (save && save.farms && save.farms[item.key]) || 0;
+  return owned > 0 || isTierUnlocked(getTier(item.key));
+}
+
+function getVisibleFarmItems(keys) {
+  return keys.map(function(key) {
     return FARMS.find(function(f) { return f.key === key; });
-  }).filter(Boolean);
+  }).filter(function(item) {
+    return isFarmVisibleInLandscape(item);
+  });
+}
+
+function getFarmTreeScene() {
+  return getVisibleFarmItems(FARM_TREE_KEYS);
 }
 
 function getFarmNodeClass(item, owned) {
-  var tierUnlocked = isTierUnlocked(getTier(item.key));
   var cls = 'farm-node';
   if (owned > 0) cls += ' owned';
-  else if (tierUnlocked) cls += ' available';
-  else cls += ' locked';
+  else cls += ' available';
   if (item.key === 'chicken' && owned > 0) cls += ' coop-building';
   return cls;
 }
@@ -2120,33 +2129,54 @@ function updateFarmBranches() {
   var panel = document.getElementById('farm-landscape');
   if (!panel) return;
   var layer = panel.querySelector('.farm-branch-layer');
-  var tree = panel.querySelector('.farm-tree');
-  if (!layer || !tree) return;
+  var zone = panel.querySelector('.farm-buildings-zone');
+  if (!layer || !zone) return;
   layer.replaceChildren();
   if (!panel.classList.contains('farm-expanded')) return;
-  var treeRect = tree.getBoundingClientRect();
+  var zoneRect = zone.getBoundingClientRect();
   FARM_TREE_BRANCHES.forEach(function(pair) {
     var parent = panel.querySelector('.farm-node[data-farm-key="' + pair[0] + '"]');
     var child = panel.querySelector('.farm-node[data-farm-key="' + pair[1] + '"]');
     if (!parent || !child) return;
     var a = parent.getBoundingClientRect();
     var b = child.getBoundingClientRect();
-    var x1 = a.left + a.width / 2 - treeRect.left;
-    var y1 = a.top + a.height - treeRect.top;
-    var x2 = b.left + b.width / 2 - treeRect.left;
-    var y2 = b.top - treeRect.top;
+    var x1 = a.left + a.width / 2 - zoneRect.left;
+    var y1 = a.top + a.height - zoneRect.top;
+    var x2 = b.left + b.width / 2 - zoneRect.left;
+    var y2 = b.top - zoneRect.top;
     var dx = x2 - x1;
     var dy = y2 - y1;
     var len = Math.sqrt(dx * dx + dy * dy);
     var line = document.createElement('div');
     var ownedPath = parent.classList.contains('owned') && child.classList.contains('owned');
-    line.className = 'farm-branch' + (child.classList.contains('locked') ? ' locked' : '') + (ownedPath ? ' owned' : '');
+    line.className = 'farm-branch' + (ownedPath ? ' owned' : '');
     line.style.left = x1 + 'px';
     line.style.top = y1 + 'px';
     line.style.width = len + 'px';
     line.style.transform = 'rotate(' + Math.atan2(dy, dx) + 'rad)';
     layer.appendChild(line);
   });
+}
+
+function createFarmNode(item, counts, panel) {
+  var owned = counts[item.key] || 0;
+  var node = document.createElement('div');
+  node.className = getFarmNodeClass(item, owned);
+  node.dataset.farmKey = item.key;
+  node.innerHTML = getFarmIconMarkup(item, owned) +
+    '<div class="owned-mark">✓</div>' +
+    '<div class="label">' + item.name + '</div>' +
+    '<div class="count">x' + owned + '</div>' +
+    '<div class="tier-badge">Tier ' + getTier(item.key) + ' · ' + fmt(farmCost(item)) + '</div>' +
+    '<div class="bonus">' + getFarmShortBonusText(item) + '</div>';
+  renderFarmSpritePreview(node.querySelector('.farm-sprite-preview'), item.key, owned % 2);
+  bindFarmNode(node, item, panel);
+  return node;
+}
+
+function appendFarmZoneNode(track, item, counts, panel) {
+  if (!isFarmVisibleInLandscape(item)) return;
+  track.appendChild(createFarmNode(item, counts, panel));
 }
 
 function renderFarmView() {
@@ -2178,50 +2208,61 @@ function renderFarmView() {
   panel.appendChild(animalLayer);
   var tree = document.createElement('div');
   tree.className = 'farm-tree';
+  var buildingsZone = document.createElement('div');
+  buildingsZone.className = 'farm-zone farm-buildings-zone';
+  buildingsZone.innerHTML = '<div class="farm-zone-label">Buildings</div>';
   var branchLayer = document.createElement('div');
   branchLayer.className = 'farm-branch-layer';
-  tree.appendChild(branchLayer);
-  var track = document.createElement('div');
-  track.className = 'farm-landscape-track';
-  FARM_TREE_ROWS.forEach(function(rowKeys, rowIndex) {
-    var row = document.createElement('div');
-    var tier = 4 - rowIndex;
-    row.className = 'farm-tier-row farm-tier-' + tier;
-    rowKeys.forEach(function(key) {
-      var item = FARMS.find(function(f) { return f.key === key; });
-      if (!item) return;
-      var owned = counts[item.key] || 0;
-      var node = document.createElement('div');
-      node.className = getFarmNodeClass(item, owned);
-      node.dataset.farmKey = item.key;
-      node.innerHTML = getFarmIconMarkup(item, owned) +
-        '<div class="owned-mark">✓</div>' +
-        '<div class="label">' + item.name + '</div>' +
-        '<div class="count">x' + owned + '</div>' +
-        '<div class="tier-badge">Tier ' + getTier(item.key) + ' · ' + fmt(farmCost(item)) + '</div>' +
-        '<div class="bonus">' + getFarmShortBonusText(item) + '</div>';
-      renderFarmSpritePreview(node.querySelector('.farm-sprite-preview'), item.key, owned % 2);
-      bindFarmNode(node, item, panel);
-      row.appendChild(node);
+  buildingsZone.appendChild(branchLayer);
+  var buildingsTrack = document.createElement('div');
+  buildingsTrack.className = 'farm-zone-track farm-buildings-track';
+  if (panel.classList.contains('farm-expanded')) {
+    FARM_BUILDING_ROWS.forEach(function(rowKeys) {
+      var visibleItems = getVisibleFarmItems(rowKeys);
+      if (visibleItems.length === 0) return;
+      var row = document.createElement('div');
+      var tier = getTier(visibleItems[0].key);
+      row.className = 'farm-tier-row farm-tier-' + tier;
+      visibleItems.forEach(function(item) {
+        row.appendChild(createFarmNode(item, counts, panel));
+      });
+      buildingsTrack.appendChild(row);
     });
-    track.appendChild(row);
+  } else {
+    getVisibleFarmItems(FARM_BUILDING_KEYS).forEach(function(item) {
+      appendFarmZoneNode(buildingsTrack, item, counts, panel);
+    });
+  }
+  buildingsZone.appendChild(buildingsTrack);
+  tree.appendChild(buildingsZone);
+  var animalsZone = document.createElement('div');
+  animalsZone.className = 'farm-zone farm-animals-zone';
+  animalsZone.innerHTML = '<div class="farm-zone-label">Animals</div>';
+  var animalsTrack = document.createElement('div');
+  animalsTrack.className = 'farm-zone-track farm-animals-track';
+  getVisibleFarmItems(FARM_ANIMAL_KEYS).forEach(function(item) {
+    appendFarmZoneNode(animalsTrack, item, counts, panel);
   });
-  tree.appendChild(track);
+  animalsZone.appendChild(animalsTrack);
+  tree.appendChild(animalsZone);
   panel.appendChild(tree);
   var tt = document.createElement('div');
   tt.id = 'farm-tooltip';
   tt.className = 'farm-tooltip';
   panel.appendChild(tt);
   panel.setAttribute('tabindex', '0');
-  panel.addEventListener('pointerdown', function() {
-    panel.classList.add('farm-tab-active');
-  });
-  panel.addEventListener('pointerup', function() {
-    panel.classList.remove('farm-tab-active');
-  });
-  panel.addEventListener('pointerleave', function() {
-    panel.classList.remove('farm-tab-active');
-  });
+  if (!panel._farmPointerBound) {
+    panel._farmPointerBound = true;
+    panel.addEventListener('pointerdown', function() {
+      panel.classList.add('farm-tab-active');
+    });
+    panel.addEventListener('pointerup', function() {
+      panel.classList.remove('farm-tab-active');
+    });
+    panel.addEventListener('pointerleave', function() {
+      panel.classList.remove('farm-tab-active');
+    });
+  }
   requestAnimationFrame(function() {
     if (animalLayer.isConnected) syncFarmAnimals(animalLayer);
     updateFarmBranches();
@@ -2242,38 +2283,7 @@ function renderFarmView() {
 }
 
 function drawFarm() {
-  var grid = document.getElementById("farm-grid");
-  if (!grid) return;
-  grid.innerHTML = "";
-  for (var i = 0; i < FARMS.length; i++) {
-    var f = FARMS[i];
-    var c = save.farms[f.key] || 0;
-    var cost = farmCost(f);
-    var tier = getTier(f.key);
-    var tierUnlocked = isTierUnlocked(tier);
-    var can = save.toes >= cost && tierUnlocked;
-    var lvl = getFarmLevel(f.key);
-    var tile = document.createElement("div");
-    tile.className = "farm-tile" + (can ? "" : " locked");
-    if (c > 0) tile.classList.add("owned");
-    tile.innerHTML = (f.walk ? '<canvas class="farm-sprite-preview" data-sprite-key="' + f.key + '" aria-hidden="true"></canvas>' : '<div class="icon">' + f.emoji + '</div>') +
-      '<div class="name">' + f.name + '</div>' +
-      '<div class="tier-badge">Tier ' + tier + '</div>' +
-      '<div class="level-badge">Lv.' + lvl + '</div>' +
-      '<div class="cost">Owned x' + c + ' · Cost ' + fmt(cost) + '</div>' +
-      '<div class="bonus">' + getFarmShortBonusText(f) + '</div>';
-    renderFarmSpritePreview(tile.querySelector('.farm-sprite-preview'), f.key, c % 2);
-    if (can) {
-      (function(idx) {
-        tile.addEventListener("click", function() {
-          tile.classList.add("farm-pop");
-          setTimeout(function() { tile.classList.remove("farm-pop"); }, 200);
-          buyFarm(idx);
-        });
-      })(i);
-    }
-    grid.appendChild(tile);
-  }
+  renderFarmView();
 }
 
 function showToast(msg) {
@@ -2488,8 +2498,6 @@ function initGame() {
   }, 1000);
 }
 window.addEventListener('DOMContentLoaded', function() {
-  const btnPrestige = document.getElementById('btn-prestige');
-  const btnAscend = document.getElementById('btn-ascend');
   const btnStart = document.getElementById('btn-start');
   const btnSave = document.getElementById('btn-save');
   const btnQuit = document.getElementById('btn-quit');
@@ -2497,7 +2505,6 @@ window.addEventListener('DOMContentLoaded', function() {
   const homeNew = document.getElementById('home-new');
   const homeLoad = document.getElementById('home-load');
   const homeQuit = document.getElementById('home-quit');
-  const btnReset = document.getElementById('btn-reset-save');
   const hudBlurToggle = document.getElementById('hud-blur-toggle');
   if (btnStart) btnStart.onclick = showHomeScreen;
   if (homeContinue) homeContinue.onclick = continueCurrentSlot;
@@ -2506,26 +2513,9 @@ window.addEventListener('DOMContentLoaded', function() {
   if (btnSave) btnSave.onclick = saveNow;
   if (btnQuit) btnQuit.onclick = quitGame;
   if (homeQuit) homeQuit.onclick = quitGame;
-  if (btnReset) btnReset.onclick = resetCurrentSave;
   if (hudBlurToggle) hudBlurToggle.onclick = toggleHudBlur;
   bindFarmTabShortcut();
   applyHudBlurPreference();
-  if (btnPrestige) btnPrestige.onclick = () => {
-    if (typeof canPrestige === 'function' && canPrestige(save)) {
-      if (typeof prestigeReset === 'function') prestigeReset();
-    } else if (typeof prestigeRequirement === 'function') {
-      showToast('Need ' + fmt(prestigeRequirement()) + ' toes to prestige');
-    } else {
-      showToast('Need 1B toes to prestige');
-    }
-  };
-  if (btnAscend) btnAscend.onclick = () => {
-    if (typeof canAscend === 'function' && canAscend()) {
-      if (typeof ascend === 'function') ascend();
-    } else {
-      showToast('Need 10 feathers + 1 prestige');
-    }
-  };
   if (typeof initGame === 'function') initGame();
 });
 </script>
@@ -2552,21 +2542,6 @@ window.addEventListener('DOMContentLoaded', function() {
   </div>
 </div>
 <div id="farm-landscape"></div>
-<div id="farm-view"></div>
-<div id="upgrades-panel">
-  <div id="upgrades-header">🛖 FARMS</div>
-  <div id="farm-grid"></div>
-  <div class="panel-controls">
-    <div class="panel-section-title">Progress</div>
-    <div class="panel-help">Buy farms, then use prestige and ascension when they unlock.</div>
-    <div class="panel-button-row">
-      <button id="btn-prestige">🪶 Prestige</button>
-      <button id="btn-ascend">🦜 Ascend</button>
-    </div>
-    <div class="panel-section-title">Save</div>
-    <button id="btn-reset-save">Reset Current Save</button>
-  </div>
-</div>
 <div id="toasts"></div>
 <div id="home-screen">
   <div class="home-panel">
