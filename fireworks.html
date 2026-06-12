@@ -125,9 +125,9 @@
     color:rgba(255,255,255,.9);font-family:'Courier New',monospace;
     backdrop-filter:blur(8px);box-shadow:0 10px 24px rgba(0,0,0,.22);pointer-events:auto;overflow:hidden}
   #farm-landscape .farm-landscape-title{font-size:10px;font-weight:900;letter-spacing:1.7px;text-transform:uppercase;
-    color:rgba(255,255,255,.66);margin-bottom:8px}
+    color:rgba(255,255,255,.72);margin-bottom:6px;opacity:.92}
   #farm-landscape .farm-ground{position:absolute;left:0;right:0;bottom:0;height:32px;z-index:0;
-    background:linear-gradient(180deg,rgba(146,238,82,.96) 0%,rgba(83,190,64,.98) 48%,rgba(39,132,45,.98) 100%);opacity:1;pointer-events:none}
+    background:linear-gradient(180deg,rgba(70,135,64,.92),rgba(45,110,40,.96));opacity:.92;pointer-events:none}
   #farm-landscape .farm-chicken-layer{position:absolute;left:0;right:0;bottom:0;z-index:1;
     width:100%;height:100%;pointer-events:none;image-rendering:pixelated}
   #farm-landscape .farm-landscape-track{position:relative;z-index:2;display:flex;align-items:flex-end;gap:10px;
@@ -140,9 +140,9 @@
     cursor:pointer;transition:transform .12s ease,background .12s ease,border-color .12s ease}
   #farm-landscape .farm-node:hover{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.16)}
   #farm-landscape .farm-node:active{transform:scale(.98)}
-  #farm-landscape .farm-node .emoji{font-size:24px;line-height:1}
-  #farm-landscape .farm-node .label{font-size:9px;font-weight:900;line-height:1.05;text-align:center;color:rgba(255,255,255,.88)}
-  #farm-landscape .farm-node .count{font-size:9px;font-weight:700;line-height:1.15;text-align:center;color:rgba(255,255,255,.66)}
+  #farm-landscape .farm-node .emoji{font-size:28px;line-height:1}
+  #farm-landscape .farm-node .label{font-size:10px;font-weight:900;line-height:1.05;text-align:center;color:rgba(255,255,255,.92)}
+  #farm-landscape .farm-node .count{font-size:11px;font-weight:800;line-height:1.15;text-align:center;color:rgba(255,255,255,.88)}
   #farm-landscape .farm-node.owned{background:rgba(255,255,255,.09);border-color:rgba(100,255,180,.22)}
   #farm-landscape .farm-node.coop-building{box-shadow:0 0 0 1px rgba(100,255,180,.18) inset}
   #farm-landscape .farm-tooltip{position:absolute;z-index:3;min-width:172px;max-width:220px;padding:10px;
@@ -156,6 +156,9 @@
     border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.12);color:#fff;cursor:pointer}
   #farm-landscape .farm-tooltip button:hover{background:rgba(255,255,255,.18)}
   #farm-landscape .farm-tooltip .tt-close{margin-left:auto}
+  #farm-landscape.farm-expanded{height:min(320px,48vh)}
+  #farm-landscape.farm-tab-active{filter:brightness(1.08)}
+  #farm-landscape{transition:height .18s ease,opacity .18s ease}
   #farm-view{display:none !important}
   #upgrades-panel{display:none !important;position:fixed;right:-9999px;top:64px;bottom:12px;width:316px;z-index:10;
     background:linear-gradient(145deg,rgba(210,242,255,.9),rgba(255,236,201,.84) 54%,rgba(229,215,255,.88));
@@ -1262,12 +1265,12 @@ var currentSlot = null;
 var selectedSlot = 1;
 function createNewSave() {
   return {toes:0, toePerClick:1, toePerSec:0, mult:1,
-    farms:{chicken:0,cow:0,crop:0,barn:0,garden:0,orchard:0,pond:0,mill:0,temple:0,ranch:0,arena:0,kingdom:0},
+    farms:{chicken:0,cow:0,pig:0,sheep:0,dog:0,crop:0,barn:0,garden:0,orchard:0,pond:0,mill:0,temple:0,ranch:0,horse:0,arena:0,kingdom:0},
     totalClicks:0, goldenClicks:0, milestones:[], saveVersion:SAVE_VERSION,
     goldenFeathers:0, prestigeMultiplier:1, totalPrestiges:0,
     lifetimeToes:0, achievements:{}, lastAchievement:null, activeLevelKey:'garden',
-    farmLevels:{chicken:1,cow:1,crop:1,barn:1,garden:1,orchard:1,pond:1,mill:1,temple:1,ranch:1,arena:1,kingdom:1},
-    farmExp:{chicken:0,cow:0,crop:0,barn:0,garden:0,orchard:0,pond:0,mill:0,temple:0,ranch:0,arena:0,kingdom:0}};
+    farmLevels:{chicken:1,cow:1,pig:1,sheep:1,dog:1,crop:1,barn:1,garden:1,orchard:1,pond:1,mill:1,temple:1,ranch:1,horse:1,arena:1,kingdom:1},
+    farmExp:{chicken:0,cow:0,pig:0,sheep:0,dog:0,crop:0,barn:0,garden:0,orchard:0,pond:0,mill:0,temple:0,ranch:0,horse:0,arena:0,kingdom:0}};
 }
 function migrateSave(save) {
   if (!save) return createNewSave();
@@ -1588,6 +1591,7 @@ function fmt(n) {
 
 function recalc() {
   var tpc = 1, tps = 0, m = 1;
+  var chickenBonus = 0;
   for (var i = 0; i < FARMS.length; i++) {
     var f = FARMS[i], c = save.farms[f.key] || 0;
     if (c === 0) continue;
@@ -1595,7 +1599,9 @@ function recalc() {
     var lvlMult = 1 + (lvl - 1) * 0.15;
     tpc += f.clickGain * c * lvlMult;
     tps += f.clickGain * c * 2 * lvlMult;
+    if (f.key === 'barn' || f.key === 'cow') chickenBonus += c;
   }
+  save.passiveBonus = chickenBonus;
   save.toePerClick = tpc;
   save.toePerSec = tps;
   save.mult = m * getPrestigeMultiplier();
@@ -1784,14 +1790,23 @@ function renderFarmView() {
   if (!panel) return;
   var counts = (save && save.farms) || {};
   var scene = [
-    { key:'chicken', emoji:'🐔', name:'Chick Coop' },
+    { key:'chicken', emoji:'🐔', name:'Chick Coop', walk:true },
+    { key:'cow', emoji:'🐄', name:'Milky Cow', walk:true },
+    { key:'pig', emoji:'🐖', name:'Pig Pen', walk:true },
+    { key:'sheep', emoji:'🐑', name:'Sheep Fold', walk:true },
+    { key:'dog', emoji:'🐕', name:'Farm Dog', walk:true },
+    { key:'barn', emoji:'🏠', name:'Barn' },
+    { key:'pig', emoji:'🐖', name:'Pig Pen', walk:true },
+    { key:'sheep', emoji:'🐑', name:'Sheep Fold', walk:true },
+    { key:'dog', emoji:'🐕', name:'Farm Dog', walk:true },
     { key:'barn', emoji:'🏠', name:'Barn' },
     { key:'garden', emoji:'🌺', name:'Garden' },
     { key:'orchard', emoji:'🥭', name:'Orchard' },
     { key:'pond', emoji:'🐸', name:'Pond' },
     { key:'mill', emoji:'🌬️', name:'Mill' },
     { key:'temple', emoji:'🏯', name:'Temple' },
-    { key:'ranch', emoji:'🐂', name:'Ranch' },
+    { key:'ranch', emoji:'🐂', name:'Ranch', walk:true },
+    { key:'horse', emoji:'🐎', name:'Pasture Horse', walk:true },
     { key:'arena', emoji:'🎪', name:'Arena' },
     { key:'kingdom', emoji:'👑', name:'Kingdom' }
   ];
@@ -1830,9 +1845,24 @@ function renderFarmView() {
     node.addEventListener('click', function(e) {
       e.preventDefault();
       e.stopPropagation();
+      var currentOwned = (save && save.farms && save.farms[item.key]) || 0;
+      var currentCost = farmCost(item);
       var f = FARMS.find(function(x) { return x.key === item.key; });
       if (!f) return;
-      openFarmTooltip(node, f, owned, farmCost(f));
+      openFarmTooltip(node, f, currentOwned, currentCost);
+    });
+    node.setAttribute('tabindex', '0');
+    node.addEventListener('keydown', function(e) {
+      if (!e || !e.key) return;
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        var currentOwned = (save && save.farms && save.farms[item.key]) || 0;
+        var currentCost = farmCost(item);
+        var f = FARMS.find(function(x) { return x.key === item.key; });
+        if (!f) return;
+        openFarmTooltip(node, f, currentOwned, currentCost);
+        panel.focus();
+      }
     });
     track.appendChild(node);
   });
@@ -1841,6 +1871,27 @@ function renderFarmView() {
   tt.id = 'farm-tooltip';
   tt.className = 'farm-tooltip';
   panel.appendChild(tt);
+  function onDocKey(e) {
+    if (e && e.key === 'Tab') {
+      e.preventDefault();
+      panel.classList.toggle('farm-expanded');
+    }
+  }
+  document.addEventListener('keydown', onDocKey);
+  panel.setAttribute('tabindex', '0');
+  panel.addEventListener('blur', function() {
+    panel.classList.remove('farm-expanded');
+  }, { once: true });
+  panel.addEventListener('pointerdown', function() {
+    panel.classList.add('farm-tab-active');
+  });
+  panel.addEventListener('pointerup', function() {
+    panel.classList.remove('farm-tab-active');
+  });
+  panel.addEventListener('pointerleave', function() {
+    panel.classList.remove('farm-tab-active');
+  });
+
   if (!panel._landscapeBound) {
     panel._landscapeBound = true;
     panel.addEventListener('click', function(e) {
