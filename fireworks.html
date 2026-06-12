@@ -119,8 +119,8 @@
   #prestige-status{color:#55317a}
   .stat-flash{animation:statFlash .24s ease}
   @keyframes statFlash{0%{transform:scale(1);filter:brightness(1)}50%{transform:scale(1.055);filter:brightness(1.35) saturate(1.18)}100%{transform:scale(1);filter:brightness(1)}}
-  #farm-landscape{position:fixed;left:16px;right:16px;bottom:calc(var(--hud-height, 130px) + 8px);z-index:11;
-    height:min(160px,22vh);max-height:160px;padding:10px 12px 14px;border-radius:14px;
+  #farm-landscape{position:fixed;left:16px;right:16px;bottom:calc(clamp(56px,8vw,110px) + 8px);z-index:11;
+    height:min(180px,24vh);padding:10px 12px 14px;border-radius:14px;
     background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.12);
     color:rgba(255,255,255,.9);font-family:'Courier New',monospace;
     backdrop-filter:blur(8px);box-shadow:0 10px 24px rgba(0,0,0,.22);pointer-events:auto;overflow:hidden}
@@ -145,7 +145,7 @@
   #farm-landscape .farm-node .count{font-size:9px;font-weight:700;line-height:1.15;text-align:center;color:rgba(255,255,255,.66)}
   #farm-landscape .farm-node.owned{background:rgba(255,255,255,.09);border-color:rgba(100,255,180,.22)}
   #farm-landscape .farm-node.coop-building{box-shadow:0 0 0 1px rgba(100,255,180,.18) inset}
-  #farm-landscape .farm-tooltip{position:absolute;z-index:3;min-width:172px;max-width:220px;padding:10px;
+  #farm-landscape .farm-tooltip{position:absolute;z-index:2;min-width:172px;max-width:220px;padding:10px;
     border-radius:10px;background:rgba(7,20,36,.96);border:1px solid rgba(255,255,255,.14);
     box-shadow:0 12px 28px rgba(0,0,0,.28);display:none}
   #farm-landscape .farm-tooltip.show{display:block}
@@ -278,13 +278,6 @@ const ctx = canvas.getContext('2d');
 let W, H;
 let canvasDpr = 1;
 
-function updateHudHeight() {
-  var hud = document.getElementById('hud');
-  if (!hud) return;
-  var height = Math.ceil(hud.getBoundingClientRect().height);
-  if (height > 0) document.documentElement.style.setProperty('--hud-height', height + 'px');
-}
-
 function resize() {
   canvasDpr = Math.max(1, window.devicePixelRatio || 1);
   W = window.innerWidth;
@@ -294,7 +287,6 @@ function resize() {
   canvas.style.width = W + 'px';
   canvas.style.height = H + 'px';
   ctx.setTransform(canvasDpr, 0, 0, canvasDpr, 0, 0);
-  updateHudHeight();
 }
 resize();
 window.addEventListener('resize', resize);
@@ -848,7 +840,6 @@ function flashStat(id) {
 var saveTimer = null;
 var farmDrawQueued = false;
 var farmChickenAnim = null;
-var farmLandscapeState = '';
 var lastClickFloat = null;
 var lastClickFloatAt = 0;
 var lastClickClearTimer = null;
@@ -1667,26 +1658,10 @@ function updateHUD() {
     " · " + (save.totalPrestiges || 0) + " done";
   var fd = document.getElementById("feather-display");
   if (fd) fd.textContent = "🪶 Golden Feathers: " + (save.goldenFeathers || 0);
-  updateHudHeight();
   renderFarmView();
 }
 
-function queueFarmChickenSync(canvas, count) {
-  count = Math.max(0, Math.min(3, count || 0));
-  if (!canvas) return;
-  if (canvas.dataset.syncedChickenCount === String(count) && farmChickenAnim &&
-      farmChickenAnim.canvas === canvas && farmChickenAnim.count === count) return;
-  requestAnimationFrame(function() {
-    if (!canvas.isConnected) return;
-    syncFarmChickens(canvas, count);
-  });
-}
-
 function syncFarmChickens(canvas, count) {
-  count = Math.max(0, Math.min(3, count || 0));
-  if (!canvas) return;
-  if (canvas.dataset.syncedChickenCount === String(count) && farmChickenAnim &&
-      farmChickenAnim.canvas === canvas && farmChickenAnim.count === count && canvas.width > 0 && canvas.height > 0) return;
   if (!farmChickenAnim) {
     farmChickenAnim = { canvas:null, ctx:null, chickens:[], count:0, raf:0, lastTime:0, dpr:1 };
   }
@@ -1694,7 +1669,6 @@ function syncFarmChickens(canvas, count) {
   anim.canvas = canvas;
   anim.ctx = canvas.getContext('2d');
   anim.count = count;
-  canvas.dataset.syncedChickenCount = String(count);
   resizeChickenCanvas(anim);
   while (anim.chickens.length < count) {
     var idx = anim.chickens.length;
@@ -1812,15 +1786,6 @@ function renderFarmView() {
     { key:'arena', emoji:'🎪', name:'Arena' },
     { key:'kingdom', emoji:'👑', name:'Kingdom' }
   ];
-  var chickenCount = Math.min(3, counts.chicken || 0);
-  var nextState = scene.map(function(item) { return item.key + ':' + (counts[item.key] || 0); }).join('|');
-  var existingChickenLayer = panel.querySelector('.farm-chicken-layer');
-  var canReuseChickenLayer = existingChickenLayer && existingChickenLayer.dataset.syncedChickenCount === String(chickenCount);
-  if (farmLandscapeState === nextState && existingChickenLayer) {
-    queueFarmChickenSync(existingChickenLayer, chickenCount);
-    return;
-  }
-  farmLandscapeState = nextState;
   panel.replaceChildren();
   var title = document.createElement('div');
   title.className = 'farm-landscape-title';
@@ -1831,11 +1796,11 @@ function renderFarmView() {
   var ground = document.createElement('div');
   ground.className = 'farm-ground';
   panel.appendChild(ground);
-  var chickenLayer = canReuseChickenLayer ? existingChickenLayer : document.createElement('canvas');
+  var chickenLayer = document.createElement('canvas');
   chickenLayer.className = 'farm-chicken-layer';
   chickenLayer.setAttribute('aria-hidden', 'true');
   panel.appendChild(chickenLayer);
-  queueFarmChickenSync(chickenLayer, chickenCount);
+  syncFarmChickens(chickenLayer, Math.min(3, counts.chicken || 0));
   scene.forEach(function(item) {
     var owned = counts[item.key] || 0;
     var node = document.createElement('div');
