@@ -1963,10 +1963,21 @@ function saveGame() {
   }
 }
 function loadGame() {
+  var slot = readCurrentSlot();
   currentSlot = null;
-  selectedSlot = readCurrentSlot() || 1;
+  selectedSlot = slot || 1;
   save = migrateSave(createNewSave());
+  if (slot) {
+    var slotData = parseSlot(slot);
+    if (slotData && slotData.state) {
+      currentSlot = slot;
+      save = migrateSave(slotData.state);
+    } else {
+      try { localStorage.removeItem(CURRENT_SLOT_KEY); } catch(e) { console.warn("current slot cleanup failed", e); }
+    }
+  }
   activeLevelKey = save.activeLevelKey || 'garden';
+  firstPurchaseDone = totalFarmCount() > 0;
   recalc();
 }
 
