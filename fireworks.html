@@ -119,18 +119,18 @@
   #prestige-status{color:#55317a}
   .stat-flash{animation:statFlash .24s ease}
   @keyframes statFlash{0%{transform:scale(1);filter:brightness(1)}50%{transform:scale(1.055);filter:brightness(1.35) saturate(1.18)}100%{transform:scale(1);filter:brightness(1)}}
-  #farm-landscape{position:fixed;left:16px;right:16px;bottom:calc(clamp(56px,8vw,110px) + 8px);z-index:11;
+  #farm-landscape{position:fixed;left:16px;right:16px;bottom:calc(clamp(56px,8vw,110px) + 140px);z-index:11;
     height:min(180px,24vh);padding:10px 12px 14px;border-radius:14px;
     background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.12);
     color:rgba(255,255,255,.9);font-family:'Courier New',monospace;
     backdrop-filter:blur(8px);box-shadow:0 10px 24px rgba(0,0,0,.22);pointer-events:auto;overflow:hidden}
   #farm-landscape .farm-landscape-title{font-size:10px;font-weight:900;letter-spacing:1.7px;text-transform:uppercase;
     color:rgba(255,255,255,.66);margin-bottom:8px}
-  #farm-landscape .farm-ground{position:absolute;left:0;right:0;bottom:0;height:24px;
-    background:linear-gradient(90deg,rgba(70,135,64,.7),rgba(112,177,84,.78),rgba(70,135,64,.7));opacity:.8;pointer-events:none}
-  #farm-landscape .farm-chicken-layer{position:absolute;left:0;right:0;bottom:0;z-index:0;
+  #farm-landscape .farm-ground{position:absolute;left:0;right:0;bottom:0;height:32px;z-index:0;
+    background:linear-gradient(180deg,rgba(146,238,82,.96) 0%,rgba(83,190,64,.98) 48%,rgba(39,132,45,.98) 100%);opacity:1;pointer-events:none}
+  #farm-landscape .farm-chicken-layer{position:absolute;left:0;right:0;bottom:0;z-index:1;
     width:100%;height:100%;pointer-events:none;image-rendering:pixelated}
-  #farm-landscape .farm-landscape-track{position:relative;z-index:1;display:flex;align-items:flex-end;gap:10px;
+  #farm-landscape .farm-landscape-track{position:relative;z-index:2;display:flex;align-items:flex-end;gap:10px;
     height:100px;overflow-x:auto;overflow-y:visible;padding:4px 2px 10px}
   #farm-landscape .farm-landscape-track::-webkit-scrollbar{height:4px}
   #farm-landscape .farm-landscape-track::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:999px}
@@ -145,7 +145,7 @@
   #farm-landscape .farm-node .count{font-size:9px;font-weight:700;line-height:1.15;text-align:center;color:rgba(255,255,255,.66)}
   #farm-landscape .farm-node.owned{background:rgba(255,255,255,.09);border-color:rgba(100,255,180,.22)}
   #farm-landscape .farm-node.coop-building{box-shadow:0 0 0 1px rgba(100,255,180,.18) inset}
-  #farm-landscape .farm-tooltip{position:absolute;z-index:2;min-width:172px;max-width:220px;padding:10px;
+  #farm-landscape .farm-tooltip{position:absolute;z-index:3;min-width:172px;max-width:220px;padding:10px;
     border-radius:10px;background:rgba(7,20,36,.96);border:1px solid rgba(255,255,255,.14);
     box-shadow:0 12px 28px rgba(0,0,0,.28);display:none}
   #farm-landscape .farm-tooltip.show{display:block}
@@ -840,6 +840,8 @@ function flashStat(id) {
 var saveTimer = null;
 var farmDrawQueued = false;
 var farmChickenAnim = null;
+const MAX_FARM_CHICKENS = 8;
+var farmLandscapeState = '';
 var lastClickFloat = null;
 var lastClickFloatAt = 0;
 var lastClickClearTimer = null;
@@ -1662,6 +1664,7 @@ function updateHUD() {
 }
 
 function syncFarmChickens(canvas, count) {
+  count = Math.max(0, Math.min(MAX_FARM_CHICKENS, count || 0));
   if (!farmChickenAnim) {
     farmChickenAnim = { canvas:null, ctx:null, chickens:[], count:0, raf:0, lastTime:0, dpr:1 };
   }
@@ -1670,13 +1673,16 @@ function syncFarmChickens(canvas, count) {
   anim.ctx = canvas.getContext('2d');
   anim.count = count;
   resizeChickenCanvas(anim);
+  var canvasWidth = anim.canvas.width / (anim.dpr || 1);
   while (anim.chickens.length < count) {
     var idx = anim.chickens.length;
+    var spread = count > 1 ? idx / (count - 1) : 0.5;
     anim.chickens.push({
-      x: 22 + idx * 58,
+      x: 18 + spread * Math.max(24, canvasWidth - 52),
       lane: idx,
+      laneOffset: ((idx * 17) % 29) - 14,
       dir: idx % 2 === 0 ? 1 : -1,
-      speed: 16 + idx * 4,
+      speed: 14 + (idx % 5) * 3,
       stepSeed: idx * 0.45
     });
   }
@@ -1690,16 +1696,19 @@ function syncFarmChickens(canvas, count) {
   }
   if (!anim.raf) {
     anim.lastTime = 0;
-    anim.raf = requestAnimationFrame(updateFarmChickens);
+    updateFarmChickens(performance.now());
   }
 }
 
 function resizeChickenCanvas(anim) {
   if (!anim || !anim.canvas) return;
   var rect = anim.canvas.getBoundingClientRect();
+  var hostRect = anim.canvas.parentElement ? anim.canvas.parentElement.getBoundingClientRect() : rect;
+  var cssWidth = rect.width || hostRect.width || window.innerWidth;
+  var cssHeight = rect.height || hostRect.height || 160;
   var dpr = Math.min(window.devicePixelRatio || 1, 2);
-  var width = Math.max(1, Math.round(rect.width * dpr));
-  var height = Math.max(1, Math.round(rect.height * dpr));
+  var width = Math.max(1, Math.round(cssWidth * dpr));
+  var height = Math.max(1, Math.round(cssHeight * dpr));
   if (anim.canvas.width !== width || anim.canvas.height !== height) {
     anim.canvas.width = width;
     anim.canvas.height = height;
@@ -1729,14 +1738,14 @@ function updateFarmChickens(time) {
   anim.ctx.imageSmoothingEnabled = false;
   for (var i = 0; i < anim.chickens.length; i++) {
     var chicken = anim.chickens[i];
-    var minX = 12 + i * 8;
-    var maxX = Math.max(minX + 24, width - 34 - i * 10);
+    var minX = 12;
+    var maxX = Math.max(minX + 24, width - 34);
     chicken.x += chicken.dir * chicken.speed * dt;
     if (chicken.x >= maxX) { chicken.x = maxX; chicken.dir = -1; }
     if (chicken.x <= minX) { chicken.x = minX; chicken.dir = 1; }
     var frame = Math.floor((time / 260) + chicken.stepSeed) % 2;
     var bob = frame === 0 ? 0 : -1;
-    var y = Math.max(28, height - 38 - (chicken.lane % 3) * 10) + bob;
+    var y = Math.max(28, height - 38 - (chicken.lane % 3) * 8 + chicken.laneOffset) + bob;
     drawChickenSprite(anim.ctx, Math.round(chicken.x), Math.round(y), chicken.dir, frame);
   }
   anim.ctx.restore();
@@ -1786,6 +1795,13 @@ function renderFarmView() {
     { key:'arena', emoji:'🎪', name:'Arena' },
     { key:'kingdom', emoji:'👑', name:'Kingdom' }
   ];
+  var nextState = scene.map(function(item) { return item.key + ':' + (counts[item.key] || 0); }).join('|');
+  var existingChickenLayer = panel.querySelector('.farm-chicken-layer');
+  if (farmLandscapeState === nextState && existingChickenLayer) {
+    syncFarmChickens(existingChickenLayer, counts.chicken || 0);
+    return;
+  }
+  farmLandscapeState = nextState;
   panel.replaceChildren();
   var title = document.createElement('div');
   title.className = 'farm-landscape-title';
@@ -1800,7 +1816,9 @@ function renderFarmView() {
   chickenLayer.className = 'farm-chicken-layer';
   chickenLayer.setAttribute('aria-hidden', 'true');
   panel.appendChild(chickenLayer);
-  syncFarmChickens(chickenLayer, Math.min(3, counts.chicken || 0));
+  requestAnimationFrame(function() {
+    if (chickenLayer.isConnected) syncFarmChickens(chickenLayer, counts.chicken || 0);
+  });
   scene.forEach(function(item) {
     var owned = counts[item.key] || 0;
     var node = document.createElement('div');
