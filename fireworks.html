@@ -130,15 +130,15 @@
     backdrop-filter:blur(8px);box-shadow:0 10px 24px rgba(0,0,0,.22);pointer-events:auto;overflow:hidden}
   #farm-landscape .farm-landscape-title{font-size:10px;font-weight:900;letter-spacing:1.7px;text-transform:uppercase;
     color:rgba(255,255,255,.72);margin-bottom:6px;opacity:.92}
-  #farm-landscape .farm-ground{position:absolute;left:0;right:0;bottom:0;height:32px;z-index:0;
+  #farm-landscape .farm-ground{position:absolute;left:0;right:0;bottom:0;height:54px;z-index:0;
     background:linear-gradient(180deg,rgba(70,135,64,.92),rgba(45,110,40,.96));opacity:.92;pointer-events:none}
-  #farm-landscape .farm-animal-layer{position:absolute;left:0;right:0;bottom:0;z-index:1;
-    width:100%;height:100%;pointer-events:none;image-rendering:pixelated}
+  #farm-landscape .farm-animal-layer{position:absolute;left:0;right:0;bottom:0;z-index:3;
+    width:100%;height:74px;pointer-events:none;image-rendering:pixelated}
   #farm-landscape .farm-landscape-track{position:relative;z-index:2;display:flex;align-items:flex-end;gap:10px;
-    height:100px;overflow-x:auto;overflow-y:visible;padding:4px 2px 10px}
+    height:104px;overflow-x:auto;overflow-y:visible;padding:4px 2px 44px}
   #farm-landscape .farm-landscape-track::-webkit-scrollbar{height:4px}
   #farm-landscape .farm-landscape-track::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:999px}
-  #farm-landscape .farm-node{position:relative;flex:0 0 auto;min-width:78px;max-width:96px;height:78px;
+  #farm-landscape .farm-node{position:relative;flex:0 0 auto;min-width:88px;max-width:104px;height:94px;
     display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;
     padding:8px 8px 6px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);
     cursor:pointer;transition:transform .12s ease,background .12s ease,border-color .12s ease}
@@ -149,8 +149,10 @@
   #farm-landscape .farm-node .emoji{font-size:28px;line-height:1}
   #farm-landscape .farm-node .label{font-size:10px;font-weight:900;line-height:1.05;text-align:center;color:rgba(255,255,255,.92)}
   #farm-landscape .farm-node .count{font-size:11px;font-weight:800;line-height:1.15;text-align:center;color:rgba(255,255,255,.88)}
+  #farm-landscape .farm-node .bonus{font-size:9px;font-weight:800;line-height:1.15;text-align:center;color:rgba(100,255,180,.88)}
   #farm-landscape .farm-node.owned{background:rgba(255,255,255,.09);border-color:rgba(100,255,180,.22)}
   #farm-landscape .farm-node.coop-building{box-shadow:0 0 0 1px rgba(100,255,180,.18) inset}
+  #farm-landscape .farm-node .farm-sprite-preview{width:32px;height:28px;image-rendering:pixelated}
   #farm-landscape .farm-tooltip{position:absolute;z-index:3;min-width:172px;max-width:220px;padding:10px;
     border-radius:10px;background:rgba(7,20,36,.96);border:1px solid rgba(255,255,255,.14);
     box-shadow:0 12px 28px rgba(0,0,0,.28);display:none}
@@ -163,7 +165,9 @@
   #farm-landscape .farm-tooltip button:hover{background:rgba(255,255,255,.18)}
   #farm-landscape .farm-tooltip button.buy-flash{animation:buyFlash .22s ease}
   #farm-landscape .farm-tooltip .tt-close{margin-left:auto}
-  #farm-landscape.farm-expanded{height:min(320px,48vh)}
+  #farm-landscape.farm-expanded{height:min(340px,52vh)}
+  #farm-landscape.farm-expanded .farm-animal-layer{height:108px}
+  #farm-landscape.farm-expanded .farm-ground{height:82px}
   #farm-landscape.farm-tab-active{filter:brightness(1.08)}
   #farm-landscape{transition:height .18s ease,opacity .18s ease}
   #farm-view{display:none !important}
@@ -210,9 +214,11 @@
   .farm-tile:active{transform:scale(.97)}
   .farm-tile.locked{opacity:.44;cursor:not-allowed;filter:saturate(.72)}
   .farm-tile .icon{font-size:23px;filter:drop-shadow(0 2px 5px rgba(12,28,52,.16))}
+  .farm-tile .farm-sprite-preview{width:34px;height:30px;image-rendering:pixelated}
   .farm-tile .name{font-size:11px;font-weight:900;text-align:center;line-height:1.05;color:#061b33}
   .farm-tile .tier-badge{font-size:9px;font-weight:800;color:#31506f;opacity:.84}
   .farm-tile .cost{font-size:10px;color:#7a4a00;font-weight:800;opacity:1}
+  .farm-tile .bonus{font-size:9px;color:#31506f;font-weight:800;text-align:center;line-height:1.15;max-width:96%}
   .farm-tile .level-badge{font-size:9px;font-weight:900;color:#08734f;opacity:1;margin-top:-2px}
   .farm-tile.owned{background:rgba(255,255,255,.62);box-shadow:0 0 0 2px rgba(100,255,180,.22),0 8px 20px rgba(12,28,52,.12),inset 0 0 0 1px rgba(255,255,255,.5)}
   .farm-tile .badge{position:absolute;top:6px;right:7px;font-size:10px;opacity:.7}
@@ -253,6 +259,7 @@
   .slot-actions{display:flex;gap:7px;margin-top:10px}
   .slot-actions .ui-btn{flex:1;color:#071424;background:rgba(255,255,255,.55);border-color:rgba(7,20,36,.18);
     padding:6px 7px;font-size:11px}
+  .slot-actions .ui-btn.delete{background:rgba(255,220,220,.62);color:#7a2121;border-color:rgba(122,33,33,.24)}
   .level-list{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
   .level-card{padding:12px;border-radius:10px;background:rgba(255,255,255,.45);
     border:1px solid rgba(7,20,36,.12);cursor:pointer;min-height:88px}
@@ -1087,6 +1094,18 @@ function getFarmBonusText(f) {
   return 'Bonus: +' + fmt(f.clickGain) + ' base farm power';
 }
 
+function getFarmShortBonusText(f) {
+  var key = f && f.key;
+  if (key === 'cow') return '+' + pctText(COW_PER_SEC_BONUS) + ' per sec';
+  if (key === 'pig') return '+' + pctText(PIG_CLICK_BONUS) + ' click power';
+  if (key === 'sheep') return '+' + SHEEP_COMBO_BONUS_MS + 'ms combo';
+  if (key === 'dog') return '+' + pctText(DOG_CRIT_CHANCE) + ' crit chance';
+  if (key === 'horse') return '+' + pctText(HORSE_SPEED_BONUS) + ' animal speed';
+  if (key === 'ranch') return '+' + pctText(RANCH_PER_SEC_BONUS) + ' per sec';
+  if (key === 'barn') return '+' + pctText(BARN_PER_SEC_BONUS) + ' per sec';
+  return '+' + fmt(f.clickGain) + ' farm power';
+}
+
 function closeFarmTooltip() {
   var tt = document.getElementById('farm-tooltip');
   if (tt) tt.classList.remove('show');
@@ -1504,6 +1523,7 @@ function renderSlotList() {
       '<div class="slot-actions">' +
         '<button class="ui-btn primary" data-action="new" data-slot="' + slot + '">New</button>' +
         '<button class="ui-btn" data-action="load" data-slot="' + slot + '"' + (summary ? "" : " disabled") + '>Load</button>' +
+        '<button class="ui-btn delete" data-action="delete" data-slot="' + slot + '"' + (summary ? "" : " disabled") + '>Delete</button>' +
       '</div>';
     card.addEventListener("click", function(event) {
       var button = event.target.closest("button");
@@ -1514,6 +1534,8 @@ function renderSlotList() {
         startNewGameInSlot(targetSlot);
       } else if (button && button.dataset.action === "load") {
         loadSlot(targetSlot, true);
+      } else if (button && button.dataset.action === "delete") {
+        deleteSaveSlot(targetSlot, true);
       } else {
         refreshStartScreen();
       }
@@ -1523,6 +1545,12 @@ function renderSlotList() {
 }
 
 function startNewGameInSlot(slot) {
+  if (slotHasSave(slot) && !window.confirm("Start a fresh run in " + getSlotName(slot) + "? This clears that save.")) return;
+  try {
+    localStorage.removeItem(getSlotKey(slot));
+  } catch(e) {
+    console.warn("new game cleanup failed", e);
+  }
   writeCurrentSlot(slot);
   save = migrateSave(createNewSave());
   activeLevelKey = save.activeLevelKey || 'garden';
@@ -1533,6 +1561,35 @@ function startNewGameInSlot(slot) {
   drawFarm();
   saveGame();
   startGame();
+}
+
+function deleteSaveSlot(slot, askConfirm) {
+  if (!slot) return false;
+  if (askConfirm && !window.confirm("Delete " + getSlotName(slot) + "? This cannot be undone.")) return false;
+  try {
+    localStorage.removeItem(getSlotKey(slot));
+    if (readCurrentSlot() === slot) localStorage.removeItem(CURRENT_SLOT_KEY);
+  } catch(e) {
+    console.warn("delete save failed", e);
+    showToast("Could not delete " + getSlotName(slot));
+    return false;
+  }
+  if (currentSlot === slot) {
+    currentSlot = null;
+    gameStarted = false;
+    save = migrateSave(createNewSave());
+    activeLevelKey = save.activeLevelKey || 'garden';
+    firstPurchaseDone = false;
+    recalc();
+    applyTheme(getActiveGameLevel().theme);
+    updateHUD();
+    drawFarm();
+    showHomeScreen();
+  }
+  selectedSlot = slot;
+  refreshStartScreen();
+  showToast(getSlotName(slot) + " deleted");
+  return true;
 }
 
 function loadSlot(slot, shouldStart) {
@@ -1566,25 +1623,27 @@ function resetCurrentSave() {
     showHomeScreen();
     return;
   }
-  if (!window.confirm("Reset current save? This deletes only " + getSlotName(currentSlot) + ".")) return;
-  var resetSlot = currentSlot;
-  try {
-    localStorage.removeItem(getSlotKey(resetSlot));
-    localStorage.removeItem(CURRENT_SLOT_KEY);
-  } catch(e) {
-    console.warn("reset failed", e);
-  }
-  currentSlot = null;
-  selectedSlot = resetSlot;
-  save = migrateSave(createNewSave());
-  activeLevelKey = save.activeLevelKey || 'garden';
-  firstPurchaseDone = false;
-  recalc();
-  applyTheme(getActiveGameLevel().theme);
-  updateHUD();
-  drawFarm();
-  showHomeScreen();
-  showToast(getSlotName(resetSlot) + " reset");
+  deleteSaveSlot(currentSlot, true);
+}
+
+function toggleFarmLandscape() {
+  var panel = document.getElementById('farm-landscape');
+  if (!panel) return;
+  panel.classList.toggle('farm-expanded');
+  panel.classList.add('farm-tab-active');
+  setTimeout(function() {
+    if (panel) panel.classList.remove('farm-tab-active');
+  }, 180);
+}
+
+function bindFarmTabShortcut() {
+  if (window.__toekanFarmTabBound) return;
+  window.__toekanFarmTabBound = true;
+  document.addEventListener('keydown', function(e) {
+    if (!e || e.key !== 'Tab') return;
+    e.preventDefault();
+    toggleFarmLandscape();
+  });
 }
 
 var GAME_LEVELS = [
@@ -1911,7 +1970,7 @@ function updateFarmAnimals(time) {
     animal.x += animal.dir * animal.speed * speedMult * dt;
     if (animal.x >= maxX) { animal.x = maxX; animal.dir = -1; }
     if (animal.x <= minX) { animal.x = minX; animal.dir = 1; }
-    animal.drawY = Math.max(32, height - 38 - (animal.lane % 4) * 9 + animal.laneOffset);
+    animal.drawY = Math.max(34, height - 12 - (animal.lane % 4) * 10 + animal.laneOffset);
   }
   drawList.sort(function(a, b) { return a.drawY - b.drawY; });
   for (var j = 0; j < drawList.length; j++) {
@@ -2007,6 +2066,28 @@ function drawHorseSprite(ctx, frame, saddle) {
   fillPixelRects(ctx, '#5b3018', frame === 0 ? [[6,17,2,5],[14,17,2,4],[17,17,2,5]] : [[5,17,2,4],[13,17,2,5],[18,17,2,4]]);
 }
 
+function renderFarmSpritePreview(canvas, key, frame) {
+  if (!canvas) return;
+  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+  var cssWidth = 34;
+  var cssHeight = 30;
+  canvas.width = Math.round(cssWidth * dpr);
+  canvas.height = Math.round(cssHeight * dpr);
+  canvas.style.width = cssWidth + 'px';
+  canvas.style.height = cssHeight + 'px';
+  var previewCtx = canvas.getContext('2d');
+  previewCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  previewCtx.clearRect(0, 0, cssWidth, cssHeight);
+  previewCtx.imageSmoothingEnabled = false;
+  drawFarmAnimalSprite(previewCtx, key, 16, 25, 1, frame || 0);
+}
+
+function getFarmIconMarkup(item) {
+  return item && item.walk
+    ? '<canvas class="farm-sprite-preview" data-sprite-key="' + item.key + '" aria-hidden="true"></canvas>'
+    : '<div class="emoji">' + getFarmNodeEmoji(item.key, 0) + '</div>';
+}
+
 function renderFarmView() {
   var panel = document.getElementById('farm-landscape');
   if (!panel) return;
@@ -2041,9 +2122,11 @@ function renderFarmView() {
     var node = document.createElement('div');
     node.className = 'farm-node' + (owned > 0 ? ' owned' : '') + (item.key === 'chicken' && owned > 0 ? ' coop-building' : '');
     node.dataset.farmKey = item.key;
-    node.innerHTML = '<div class="emoji">' + getFarmNodeEmoji(item.key, owned) + '</div>' +
+    node.innerHTML = getFarmIconMarkup(item) +
       '<div class="label">' + item.name + '</div>' +
-      '<div class="count">' + getFarmBuildingState(item.key, owned) + '</div>';
+      '<div class="count">x' + owned + ' · Cost ' + fmt(farmCost(item)) + '</div>' +
+      '<div class="bonus">' + getFarmShortBonusText(item) + '</div>';
+    renderFarmSpritePreview(node.querySelector('.farm-sprite-preview'), item.key, owned % 2);
     node.addEventListener('click', function(e) {
       e.preventDefault();
       e.stopPropagation();
@@ -2073,17 +2156,7 @@ function renderFarmView() {
   tt.id = 'farm-tooltip';
   tt.className = 'farm-tooltip';
   panel.appendChild(tt);
-  function onDocKey(e) {
-    if (e && e.key === 'Tab') {
-      e.preventDefault();
-      panel.classList.toggle('farm-expanded');
-    }
-  }
-  document.addEventListener('keydown', onDocKey);
   panel.setAttribute('tabindex', '0');
-  panel.addEventListener('blur', function() {
-    panel.classList.remove('farm-expanded');
-  }, { once: true });
   panel.addEventListener('pointerdown', function() {
     panel.classList.add('farm-tab-active');
   });
@@ -2123,11 +2196,13 @@ function drawFarm() {
     var tile = document.createElement("div");
     tile.className = "farm-tile" + (can ? "" : " locked");
     if (c > 0) tile.classList.add("owned");
-    tile.innerHTML = '<div class="icon">' + f.emoji + '</div>' +
+    tile.innerHTML = (f.walk ? '<canvas class="farm-sprite-preview" data-sprite-key="' + f.key + '" aria-hidden="true"></canvas>' : '<div class="icon">' + f.emoji + '</div>') +
       '<div class="name">' + f.name + '</div>' +
       '<div class="tier-badge">Tier ' + tier + '</div>' +
       '<div class="level-badge">Lv.' + lvl + '</div>' +
-      '<div class="cost">x' + c + ' · ' + fmt(cost) + '</div>';
+      '<div class="cost">Owned x' + c + ' · Cost ' + fmt(cost) + '</div>' +
+      '<div class="bonus">' + getFarmShortBonusText(f) + '</div>';
+    renderFarmSpritePreview(tile.querySelector('.farm-sprite-preview'), f.key, c % 2);
     if (can) {
       (function(idx) {
         tile.addEventListener("click", function() {
@@ -2373,6 +2448,7 @@ window.addEventListener('DOMContentLoaded', function() {
   if (homeQuit) homeQuit.onclick = quitGame;
   if (btnReset) btnReset.onclick = resetCurrentSave;
   if (hudBlurToggle) hudBlurToggle.onclick = toggleHudBlur;
+  bindFarmTabShortcut();
   applyHudBlurPreference();
   if (btnPrestige) btnPrestige.onclick = () => {
     if (typeof canPrestige === 'function' && canPrestige(save)) {
