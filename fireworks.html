@@ -962,6 +962,45 @@ function updateLastClickHUD(gain, comboCount) {
   }, LAST_CLICK_VISIBLE_MS);
 }
 
+function getFarmBuildingState(key, owned) {
+  if (key === 'chicken') {
+    if (owned <= 0) return '🌱 Empty Plot';
+    if (owned === 1) return '🐔 Coop + 🐣 x1';
+    if (owned === 2) return '🐔 Coop + 🐣🐣';
+    return '🐔 Coop + 🐣🐣🐣';
+  }
+  return owned > 0 ? 'Owned x' + owned : 'Empty';
+}
+
+function getFarmNodeEmoji(key, owned) {
+  if (key === 'chicken') {
+    if (owned <= 0) return '🌱';
+    return '🐔';
+  }
+  var farm = FARMS.find(function(f) { return f.key === key; });
+  return farm ? farm.emoji : '🌱';
+}
+
+function closeFarmTooltip() {
+  var tt = document.getElementById('farm-tooltip');
+  if (tt) tt.classList.remove('show');
+}
+
+function openFarmTooltip(node, f, owned, cost) {
+  var tt = document.getElementById('farm-tooltip');
+  if (!tt) return;
+  tt.innerHTML = '' +
+    '<div class="tt-name">' + f.name + '</div>' +
+    '<div class="tt-meta">Owned: ' + owned + '<br>Next upgrade: ' + fmt(cost) + '</div>' +
+    '<div class="tt-actions"><button type="button" data-buy-farm="' + f.key + '">Buy</button><button type="button" class="tt-close">Close</button></div>';
+  var panel = document.getElementById('farm-landscape');
+  var rect = node.getBoundingClientRect();
+  var host = panel.getBoundingClientRect();
+  tt.style.left = Math.max(8, rect.left - host.left) + 'px';
+  tt.style.top = Math.max(8, rect.top - host.top - 84) + 'px';
+  tt.classList.add('show');
+}
+
 const CLICK_PALETTE = ['#ff4d4d','#ff9f1a','#ffe44d','#9cff57','#57e5ff','#4d8dff','#d857ff','#ffffff'];
 
 function addOrRefreshClickFloat(x, y, gain, comboCount) {
@@ -1600,81 +1639,63 @@ function updateHUD() {
 }
 
 function renderFarmView() {
-  var panel = document.getElementById("farm-view");
+  var panel = document.getElementById('farm-landscape');
   if (!panel) return;
   var counts = (save && save.farms) || {};
-  var chicken = counts.chicken || 0;
-  var items = [];
-  var farmScene = [
-    { key:'chicken', emoji:'🐣', max:3 },
-    { key:'cow', emoji:'🐄', max:1 },
-    { key:'crop', emoji:'🌽', max:1 },
-    { key:'barn', emoji:'🏠', max:1 },
-    { key:'garden', emoji:'🌺', max:1 },
-    { key:'orchard', emoji:'🥭', max:1 },
-    { key:'pond', emoji:'🐸', max:1 },
-    { key:'mill', emoji:'🌬️', max:1 },
-    { key:'temple', emoji:'🏯', max:1 },
-    { key:'ranch', emoji:'🐂', max:1 },
-    { key:'arena', emoji:'🎪', max:1 },
-    { key:'kingdom', emoji:'👑', max:1 }
+  var scene = [
+    { key:'chicken', emoji:'🐔', name:'Chick Coop' },
+    { key:'barn', emoji:'🏠', name:'Barn' },
+    { key:'garden', emoji:'🌺', name:'Garden' },
+    { key:'orchard', emoji:'🥭', name:'Orchard' },
+    { key:'pond', emoji:'🐸', name:'Pond' },
+    { key:'mill', emoji:'🌬️', name:'Mill' },
+    { key:'temple', emoji:'🏯', name:'Temple' },
+    { key:'ranch', emoji:'🐂', name:'Ranch' },
+    { key:'arena', emoji:'🎪', name:'Arena' },
+    { key:'kingdom', emoji:'👑', name:'Kingdom' }
   ];
-
-  farmScene.forEach(function(item) {
-    var owned = counts[item.key] || 0;
-    if (owned <= 0) return;
-    var repeats = item.key === 'chicken' ? Math.min(3, owned) : 1;
-    for (var i = 0; i < repeats; i++) items.push(item.emoji);
-  });
-
   panel.replaceChildren();
-  panel.classList.add('farm-clickable');
-  var title = document.createElement("div");
-  title.className = "farm-view-title";
-  title.textContent = "Farm";
+  var title = document.createElement('div');
+  title.className = 'farm-landscape-title';
+  title.textContent = 'Farm Landscape';
   panel.appendChild(title);
-
-  if (chicken <= 0 && items.length === 0) {
-    var empty = document.createElement("div");
-    empty.className = "farm-empty";
-    empty.textContent = "🌱 Empty Plot";
-    panel.appendChild(empty);
-    return;
-  }
-
-  var scene = document.createElement("div");
-  scene.className = "farm-view-scene";
-  var coop = document.createElement("div");
-  coop.className = "farm-view-cell coop";
-  coop.setAttribute('data-farm-coop', '1');
-  coop.textContent = '🐔';
-  scene.appendChild(coop);
-  var chickLabel = document.createElement("div");
-  chickLabel.className = "farm-view-cell";
-  chickLabel.style.gridColumn = 'span 3';
-  chickLabel.textContent = chicken <= 1 ? '🐣 x1' : chicken === 2 ? '🐣🐣' : '🐣🐣🐣';
-  scene.appendChild(chickLabel);
-  items.slice(1, 16).forEach(function(emoji) {
-    var cell = document.createElement("div");
-    cell.className = "farm-view-cell";
-    cell.textContent = emoji;
-    scene.appendChild(cell);
-  });
-  panel.appendChild(scene);
-  if (!panel._coopBound) {
-    panel._coopBound = true;
-    panel.addEventListener('click', function(e) {
-      var target = e.target && e.target.closest ? e.target.closest('[data-farm-coop]') : null;
-      if (!target) return;
+  var track = document.createElement('div');
+  track.className = 'farm-landscape-track';
+  var ground = document.createElement('div');
+  ground.className = 'farm-ground';
+  panel.appendChild(ground);
+  scene.forEach(function(item) {
+    var owned = counts[item.key] || 0;
+    var node = document.createElement('div');
+    node.className = 'farm-node' + (owned > 0 ? ' owned' : '') + (item.key === 'chicken' && owned > 0 ? ' coop-building' : '');
+    node.dataset.farmKey = item.key;
+    node.innerHTML = '<div class="emoji">' + getFarmNodeEmoji(item.key, owned) + '</div>' +
+      '<div class="label">' + item.name + '</div>' +
+      '<div class="count">' + getFarmBuildingState(item.key, owned) + '</div>';
+    node.addEventListener('click', function(e) {
       e.preventDefault();
       e.stopPropagation();
-      panel.classList.remove('farm-flash');
-      void panel.offsetWidth;
-      panel.classList.add('farm-flash');
-      setTimeout(function() { panel.classList.remove('farm-flash'); }, 180);
-      var rect = panel.getBoundingClientRect();
-      addOrRefreshClickFloat(rect.left + rect.width * 0.5, rect.top + rect.height * 0.55, 1, 0);
-      updateLastClickHUD(1, 0);
+      var f = FARMS.find(function(x) { return x.key === item.key; });
+      if (!f) return;
+      openFarmTooltip(node, f, owned, farmCost(f));
+    });
+    track.appendChild(node);
+  });
+  panel.appendChild(track);
+  var tt = document.createElement('div');
+  tt.id = 'farm-tooltip';
+  tt.className = 'farm-tooltip';
+  panel.appendChild(tt);
+  if (!panel._landscapeBound) {
+    panel._landscapeBound = true;
+    panel.addEventListener('click', function(e) {
+      var closeBtn = e.target && e.target.classList && e.target.classList.contains('tt-close') ? e.target : null;
+      if (closeBtn) { closeFarmTooltip(); return; }
+      var buyBtn = e.target && e.target.getAttribute && e.target.getAttribute('data-buy-farm');
+      if (buyBtn) {
+        var idx = FARMS.findIndex(function(f) { return f.key === buyBtn; });
+        if (idx >= 0) buyFarm(idx);
+      }
     });
   }
 }
@@ -1975,10 +1996,8 @@ window.addEventListener('DOMContentLoaded', function() {
     <div class="sub" id="game-level-status">World: Starter Garden · 0% click bonus</div>
   </div>
 </div>
-<div id="farm-view">
-  <div class="farm-view-title">Farm View</div>
-  <div class="farm-empty">🌱 Empty Plot</div>
-</div>
+<div id="farm-landscape"></div>
+<div id="farm-view"></div>
 <div id="upgrades-panel">
   <div id="upgrades-header">🛖 FARMS</div>
   <div id="farm-grid"></div>
