@@ -116,9 +116,13 @@
   #combo-meter .combo-text{font-size:13px;color:rgba(255,255,255,.85);opacity:1;font-weight:700;text-shadow:none}
   #combo-meter .combo-track{height:6px;margin-top:5px;border-radius:999px;background:rgba(255,255,255,.14);overflow:hidden}
   #combo-meter .combo-fill{height:100%;width:0%;border-radius:999px;background:rgba(255,255,255,.55);transition:width .08s linear,background .2s}
+  #combo-meter.combo-pulse .combo-fill{animation:comboPulse .16s ease}
+  @keyframes comboPulse{0%{filter:brightness(1)}50%{filter:brightness(1.75)}100%{filter:brightness(1)}}
   #prestige-status{color:#55317a}
   .stat-flash{animation:statFlash .24s ease}
   @keyframes statFlash{0%{transform:scale(1);filter:brightness(1)}50%{transform:scale(1.055);filter:brightness(1.35) saturate(1.18)}100%{transform:scale(1);filter:brightness(1)}}
+  body.click-shake{animation:clickShake .12s linear}
+  @keyframes clickShake{0%,100%{transform:translate(0,0)}25%{transform:translate(2px,-1px)}50%{transform:translate(-2px,1px)}75%{transform:translate(1px,2px)}}
   #farm-landscape{position:fixed;left:16px;right:16px;bottom:calc(clamp(56px,8vw,110px) + 140px);z-index:11;
     height:min(180px,24vh);padding:10px 12px 14px;border-radius:14px;
     background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.12);
@@ -128,7 +132,7 @@
     color:rgba(255,255,255,.72);margin-bottom:6px;opacity:.92}
   #farm-landscape .farm-ground{position:absolute;left:0;right:0;bottom:0;height:32px;z-index:0;
     background:linear-gradient(180deg,rgba(70,135,64,.92),rgba(45,110,40,.96));opacity:.92;pointer-events:none}
-  #farm-landscape .farm-chicken-layer{position:absolute;left:0;right:0;bottom:0;z-index:1;
+  #farm-landscape .farm-animal-layer{position:absolute;left:0;right:0;bottom:0;z-index:1;
     width:100%;height:100%;pointer-events:none;image-rendering:pixelated}
   #farm-landscape .farm-landscape-track{position:relative;z-index:2;display:flex;align-items:flex-end;gap:10px;
     height:100px;overflow-x:auto;overflow-y:visible;padding:4px 2px 10px}
@@ -140,6 +144,8 @@
     cursor:pointer;transition:transform .12s ease,background .12s ease,border-color .12s ease}
   #farm-landscape .farm-node:hover{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.16)}
   #farm-landscape .farm-node:active{transform:scale(.98)}
+  #farm-landscape .farm-node.buy-flash{animation:buyFlash .28s ease}
+  @keyframes buyFlash{0%{transform:scale(1);border-color:rgba(100,255,180,.22)}55%{transform:scale(1.07);border-color:rgba(100,255,180,.9);background:rgba(100,255,180,.18)}100%{transform:scale(1);border-color:rgba(100,255,180,.22)}}
   #farm-landscape .farm-node .emoji{font-size:28px;line-height:1}
   #farm-landscape .farm-node .label{font-size:10px;font-weight:900;line-height:1.05;text-align:center;color:rgba(255,255,255,.92)}
   #farm-landscape .farm-node .count{font-size:11px;font-weight:800;line-height:1.15;text-align:center;color:rgba(255,255,255,.88)}
@@ -155,6 +161,7 @@
   #farm-landscape .farm-tooltip button{font-family:'Courier New',monospace;font-size:10px;font-weight:900;padding:6px 8px;border-radius:8px;
     border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.12);color:#fff;cursor:pointer}
   #farm-landscape .farm-tooltip button:hover{background:rgba(255,255,255,.18)}
+  #farm-landscape .farm-tooltip button.buy-flash{animation:buyFlash .22s ease}
   #farm-landscape .farm-tooltip .tt-close{margin-left:auto}
   #farm-landscape.farm-expanded{height:min(320px,48vh)}
   #farm-landscape.farm-tab-active{filter:brightness(1.08)}
@@ -310,6 +317,8 @@ const MAX_COMPRESSION_WAVES = 2;
 const HIGH_LOAD_EFFECT_THRESHOLD = 0.8;
 const COMBO_CLICK_WINDOW_MS = 900;
 const COMBO_RESET_MS = 1200;
+const SHEEP_COMBO_BONUS_MS = 120;
+const MAX_SHEEP_COMBO_BONUS_MS = 900;
 
 function visualLoadFactor() {
   return Math.max(
@@ -404,11 +413,14 @@ class FloatingText {
     this.maxLife = life;
     this.vx = vx;
     this.vy = vy;
+    this.age = 0;
     this.alive = true;
   }
   update() {
+    this.age++;
     this.x += this.vx;
     this.y += this.vy;
+    this.vy += 0.035;
     this.life--;
     if (this.life <= 0) this.alive = false;
   }
@@ -421,14 +433,45 @@ class FloatingText {
     ctx.font = `900 ${this.fontSize}px Courier New`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
+    const progress = 1 - alpha;
+    const snap = 1 + Math.sin(Math.min(1, progress) * Math.PI) * 0.1;
+    ctx.translate(this.x, this.y);
+    ctx.scale(snap, snap);
     ctx.lineWidth = this.fontSize >= 28 ? 1.5 : 1;
     ctx.strokeStyle = 'rgba(3,8,18,0.96)';
     ctx.shadowColor = this.color;
     ctx.shadowBlur = glowStrength;
-    ctx.strokeText(this.text, this.x, this.y);
+    ctx.strokeText(this.text, 0, 0);
     ctx.shadowBlur = 0;
     ctx.fillStyle = this.fontSize >= 28 ? '#ffffff' : '#fff6b0';
-    ctx.fillText(this.text, this.x, this.y);
+    ctx.fillText(this.text, 0, 0);
+    ctx.restore();
+  }
+}
+
+class ClickRipple {
+  constructor(x, y, color, life = 24) {
+    this.x = x;
+    this.y = y;
+    this.color = color;
+    this.life = life;
+    this.maxLife = life;
+    this.alive = true;
+  }
+  update() {
+    this.life--;
+    if (this.life <= 0) this.alive = false;
+  }
+  draw() {
+    const alpha = Math.max(0, this.life / this.maxLife);
+    if (alpha <= 0) return;
+    ctx.save();
+    ctx.globalAlpha = alpha * 0.9;
+    ctx.strokeStyle = this.color;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, 8 + (1 - alpha) * 28, 0, Math.PI * 2);
+    ctx.stroke();
     ctx.restore();
   }
 }
@@ -777,6 +820,11 @@ function getComboDisplayLabel(count) {
   return '';
 }
 
+function getComboResetMs() {
+  var sheep = save && save.farms ? (save.farms.sheep || 0) : 0;
+  return COMBO_RESET_MS + Math.min(MAX_SHEEP_COMBO_BONUS_MS, sheep * SHEEP_COMBO_BONUS_MS);
+}
+
 function updateComboForClick(now) {
   if (combo.lastClickAt && now - combo.lastClickAt <= COMBO_CLICK_WINDOW_MS) {
     combo.count++;
@@ -786,7 +834,7 @@ function updateComboForClick(now) {
   }
   combo.best = Math.max(combo.best, combo.count);
   combo.lastClickAt = now;
-  combo.expiresAt = now + COMBO_RESET_MS;
+  combo.expiresAt = now + getComboResetMs();
   return combo.count;
 }
 
@@ -816,7 +864,7 @@ function updateComboMeter(now) {
   const fill = document.getElementById('combo-fill');
   const label = getComboDisplayLabel(combo.count);
   const remaining = combo.count > 0 ? Math.max(0, combo.expiresAt - now) : 0;
-  const pct = Math.min(100, Math.max(0, (remaining / COMBO_RESET_MS) * 100));
+  const pct = Math.min(100, Math.max(0, (remaining / getComboResetMs()) * 100));
   const mult = getComboMultiplier(combo.count);
 
   if (text) {
@@ -832,6 +880,20 @@ function updateComboMeter(now) {
   }
 }
 
+function triggerClickShake() {
+  document.body.classList.remove('click-shake');
+  void document.body.offsetWidth;
+  document.body.classList.add('click-shake');
+}
+
+function pulseComboMeter() {
+  const meter = document.getElementById('combo-meter');
+  if (!meter) return;
+  meter.classList.remove('combo-pulse');
+  void meter.offsetWidth;
+  meter.classList.add('combo-pulse');
+}
+
 function flashStat(id) {
   const el = document.getElementById(id);
   if (!el) return;
@@ -842,13 +904,13 @@ function flashStat(id) {
 
 var saveTimer = null;
 var farmDrawQueued = false;
-var farmChickenAnim = null;
-const MAX_FARM_CHICKENS = 8;
+var farmAnimalAnim = null;
+const MAX_FARM_ANIMALS = 12;
 var farmLandscapeState = '';
 var lastClickFloat = null;
 var lastClickFloatAt = 0;
 var lastClickClearTimer = null;
-const CLICK_FLOAT_MIN_LIFE = 90;
+const CLICK_FLOAT_MIN_LIFE = 56;
 const CLICK_FLOAT_REUSE_MS = 100;
 const LAST_CLICK_VISIBLE_MS = 2000;
 
@@ -1009,6 +1071,22 @@ function getFarmNodeEmoji(key, owned) {
   return farm ? farm.emoji : '🌱';
 }
 
+function pctText(value) {
+  return Math.round(value * 100) + '%';
+}
+
+function getFarmBonusText(f) {
+  var key = f && f.key;
+  if (key === 'cow') return 'Bonus: +' + pctText(COW_PER_SEC_BONUS) + ' per sec';
+  if (key === 'pig') return 'Bonus: +' + pctText(PIG_CLICK_BONUS) + ' click power';
+  if (key === 'sheep') return 'Bonus: +' + SHEEP_COMBO_BONUS_MS + 'ms combo time';
+  if (key === 'dog') return 'Bonus: +' + pctText(DOG_CRIT_CHANCE) + ' critical click chance';
+  if (key === 'horse') return 'Bonus: +' + pctText(HORSE_SPEED_BONUS) + ' animal speed';
+  if (key === 'ranch') return 'Bonus: +' + pctText(RANCH_PER_SEC_BONUS) + ' per sec, saddle animals';
+  if (key === 'barn') return 'Bonus: +' + pctText(BARN_PER_SEC_BONUS) + ' per sec';
+  return 'Bonus: +' + fmt(f.clickGain) + ' base farm power';
+}
+
 function closeFarmTooltip() {
   var tt = document.getElementById('farm-tooltip');
   if (tt) tt.classList.remove('show');
@@ -1017,9 +1095,10 @@ function closeFarmTooltip() {
 function openFarmTooltip(node, f, owned, cost) {
   var tt = document.getElementById('farm-tooltip');
   if (!tt) return;
+  var buyIdx = FARMS.findIndex(function(x) { return x.key === f.key; });
   tt.innerHTML = '' +
     '<div class="tt-name">' + f.name + '</div>' +
-    '<div class="tt-meta">Owned: ' + owned + '<br>Next upgrade: ' + fmt(cost) + '</div>' +
+    '<div class="tt-meta">Owned: ' + owned + '<br>Next upgrade: ' + fmt(cost) + '<br>' + getFarmBonusText(f) + '</div>' +
     '<div class="tt-actions"><button type="button" data-buy-farm="' + f.key + '">Buy</button><button type="button" class="tt-close">Close</button></div>';
   var panel = document.getElementById('farm-landscape');
   var rect = node.getBoundingClientRect();
@@ -1027,6 +1106,24 @@ function openFarmTooltip(node, f, owned, cost) {
   tt.style.left = Math.max(8, rect.left - host.left) + 'px';
   tt.style.top = Math.max(8, rect.top - host.top - 84) + 'px';
   tt.classList.add('show');
+  var buyBtn = tt.querySelector('[data-buy-farm]');
+  if (buyBtn) {
+    buyBtn.onclick = function(e) {
+      e.stopPropagation();
+      e.preventDefault();
+      buyBtn.classList.add('buy-flash');
+      if (buyIdx >= 0) buyFarm(buyIdx);
+      setTimeout(closeFarmTooltip, 120);
+    };
+  }
+  var closeBtn = tt.querySelector('.tt-close');
+  if (closeBtn) {
+    closeBtn.onclick = function(e) {
+      e.stopPropagation();
+      e.preventDefault();
+      closeFarmTooltip();
+    };
+  }
 }
 
 const CLICK_PALETTE = ['#ff4d4d','#ff9f1a','#ffe44d','#9cff57','#57e5ff','#4d8dff','#d857ff','#ffffff'];
@@ -1048,7 +1145,7 @@ function addOrRefreshClickFloat(x, y, gain, comboCount) {
     lastClickFloat.life = CLICK_FLOAT_MIN_LIFE;
     lastClickFloat.maxLife = CLICK_FLOAT_MIN_LIFE;
     lastClickFloat.vx = (Math.random() - 0.5) * (comboCount >= 3 ? 0.3 : 0.18);
-    lastClickFloat.vy = comboCount >= 3 ? -1.55 : -1.35;
+    lastClickFloat.vy = comboCount >= 3 ? -2.35 : -2.05;
     lastClickFloatAt = now;
     return;
   }
@@ -1061,7 +1158,7 @@ function addOrRefreshClickFloat(x, y, gain, comboCount) {
     floatSize + milestoneBoost,
     CLICK_FLOAT_MIN_LIFE,
     (Math.random() - 0.5) * (comboCount >= 3 ? 0.3 : 0.18),
-    comboCount >= 3 ? -1.55 : -1.35
+    comboCount >= 3 ? -2.35 : -2.05
   );
   screenEffects.push(lastClickFloat);
   lastClickFloatAt = now;
@@ -1078,7 +1175,10 @@ function handleCanvasPointer(e) {
   const now = performance.now();
   const comboCount = updateComboForClick(now);
   const comboMult = getComboMultiplier(comboCount);
-  const gain = save.toePerClick * save.mult * comboMult * getActiveGameLevel().bonus;
+  const critChance = Math.min(0.35, save.criticalClickChance || 0);
+  const isCritical = critChance > 0 && Math.random() < critChance;
+  const critMult = isCritical ? DOG_CRIT_MULTIPLIER : 1;
+  const gain = save.toePerClick * save.mult * comboMult * getActiveGameLevel().bonus * critMult;
   save.toes += gain;
   save.lifetimeToes = (save.lifetimeToes || 0) + gain;
   save.totalClicks++;
@@ -1092,7 +1192,15 @@ function handleCanvasPointer(e) {
   if (!heavyLoad) {
     spawnBurst(x, y, col);
   }
+  triggerClickShake();
+  pulseComboMeter();
+  if (canSpawnScreenEffect()) {
+    screenEffects.push(new ClickRipple(x, y, isCritical ? '#ffd34d' : THEMES[currentTheme].textBright, 24));
+  }
   addOrRefreshClickFloat(x, y, gain, comboCount);
+  if (isCritical && canSpawnScreenEffect()) {
+    screenEffects.push(new FloatingText(x, Math.max(64, y - 42), 'CRIT!', '#ffd34d', 24, 42, 0, -1.8));
+  }
   if (heavyLoad) {
     if (canSpawnScreenEffect()) {
       // Low-cost fallback for heavy effect bursts: avoid expensive particles and multiple text objects.
@@ -1529,8 +1637,11 @@ function checkAchievements() {
 }
 
 var FARMS = [
-  {key:'chicken',  emoji:'🐣', name:'Chick Coop',   cost:25,    clickGain:1},
-  {key:'cow',     emoji:'🐄', name:'Milky Cow',    cost:150,   clickGain:3},
+  {key:'chicken',  emoji:'🐣', name:'Chick Coop',   cost:25,    clickGain:1, walk:true},
+  {key:'cow',     emoji:'🐄', name:'Milky Cow',    cost:150,   clickGain:3, walk:true},
+  {key:'pig',     emoji:'🐖', name:'Pig Pen',      cost:260,   clickGain:4, walk:true},
+  {key:'sheep',   emoji:'🐑', name:'Sheep Fold',   cost:420,   clickGain:5, walk:true},
+  {key:'dog',     emoji:'🐕', name:'Farm Dog',     cost:520,   clickGain:6, walk:true},
   {key:'crop',    emoji:'🌽', name:'Corn Plot',    cost:80,    clickGain:2},
   {key:'barn',    emoji:'🏠', name:'Little Barn',  cost:600,   clickGain:8},
   {key:'garden',  emoji:'🌺', name:'Tropical Garden', cost:1200, clickGain:15},
@@ -1538,16 +1649,24 @@ var FARMS = [
   {key:'pond',    emoji:'🐸', name:'Toad Pond',    cost:8000,  clickGain:60},
   {key:'mill',    emoji:'🌬️', name:'Breeze Mill',  cost:20000, clickGain:120},
   {key:'temple',  emoji:'🏯', name:'Toco Temple',  cost:100000,clickGain:300},
-  {key:'ranch',   emoji:'🐂', name:'Toucan Ranch', cost:400000,clickGain:750},
+  {key:'ranch',   emoji:'🐂', name:'Toucan Ranch', cost:400000,clickGain:750, walk:true},
+  {key:'horse',   emoji:'🐎', name:'Pasture Horse', cost:650000,clickGain:900, walk:true},
   {key:'arena',   emoji:'🎪', name:'Feast Arena',  cost:2000000,clickGain:2000},
   {key:'kingdom', emoji:'👑', name:'Beak Kingdom', cost:100000000,clickGain:10000}
 ];
 const FARM_TIERS = {
-  chicken:1, cow:1, crop:1,
+  chicken:1, cow:1, pig:1, sheep:1, dog:1, crop:1,
   barn:2, garden:2, orchard:2,
   pond:3, mill:3, temple:3,
-  ranch:4, arena:4, kingdom:4
+  ranch:4, horse:4, arena:4, kingdom:4
 };
+const COW_PER_SEC_BONUS = 0.1;
+const PIG_CLICK_BONUS = 0.05;
+const DOG_CRIT_CHANCE = 0.03;
+const DOG_CRIT_MULTIPLIER = 2;
+const HORSE_SPEED_BONUS = 0.08;
+const BARN_PER_SEC_BONUS = 0.05;
+const RANCH_PER_SEC_BONUS = 0.08;
 function getTier(key){ return FARM_TIERS[key] || 1; }
 function isTierUnlocked(tier){
   if (!window.save) return tier <= 1;
@@ -1591,7 +1710,6 @@ function fmt(n) {
 
 function recalc() {
   var tpc = 1, tps = 0, m = 1;
-  var chickenBonus = 0;
   for (var i = 0; i < FARMS.length; i++) {
     var f = FARMS[i], c = save.farms[f.key] || 0;
     if (c === 0) continue;
@@ -1599,9 +1717,18 @@ function recalc() {
     var lvlMult = 1 + (lvl - 1) * 0.15;
     tpc += f.clickGain * c * lvlMult;
     tps += f.clickGain * c * 2 * lvlMult;
-    if (f.key === 'barn' || f.key === 'cow') chickenBonus += c;
   }
-  save.passiveBonus = chickenBonus;
+  var cowCount = save.farms.cow || 0;
+  var pigCount = save.farms.pig || 0;
+  var dogCount = save.farms.dog || 0;
+  var barnCount = save.farms.barn || 0;
+  var ranchCount = save.farms.ranch || 0;
+  var horseCount = save.farms.horse || 0;
+  tpc *= 1 + pigCount * PIG_CLICK_BONUS;
+  tps *= 1 + cowCount * COW_PER_SEC_BONUS + barnCount * BARN_PER_SEC_BONUS + ranchCount * RANCH_PER_SEC_BONUS;
+  save.passiveBonus = cowCount + barnCount + ranchCount;
+  save.criticalClickChance = Math.min(0.35, dogCount * DOG_CRIT_CHANCE);
+  save.animalSpeedBonus = Math.min(0.8, horseCount * HORSE_SPEED_BONUS + ranchCount * 0.04);
   save.toePerClick = tpc;
   save.toePerSec = tps;
   save.mult = m * getPrestigeMultiplier();
@@ -1610,6 +1737,15 @@ function recalc() {
 function farmCost(f) {
   var c = save.farms[f.key] || 0;
   return Math.floor(f.cost * Math.pow(1.15, c));
+}
+
+function flashFarmNode(key) {
+  var node = document.querySelector('#farm-landscape .farm-node[data-farm-key="' + key + '"]');
+  if (!node) return;
+  node.classList.remove('buy-flash');
+  void node.offsetWidth;
+  node.classList.add('buy-flash');
+  setTimeout(function() { node.classList.remove('buy-flash'); }, 320);
 }
 
 function buyFarm(idx) {
@@ -1627,9 +1763,10 @@ function buyFarm(idx) {
   checkAchievements();
   updateHUD();
   drawFarm();
+  requestAnimationFrame(function() { flashFarmNode(f.key); });
   var clickDelta = (save.toePerClick * save.mult) - beforeClick;
   var secDelta = (save.toePerSec * save.mult) - beforeSec;
-  showToast(f.name + " bought: +" + fmt(clickDelta) + " per click, +" + fmt(secDelta) + " /sec");
+  showToast("Bought! " + f.name + ": +" + fmt(clickDelta) + " per click, +" + fmt(secDelta) + " /sec");
   flashStat("toe-count");
   flashStat("click-power");
   flashStat("per-sec");
@@ -1669,32 +1806,55 @@ function updateHUD() {
   renderFarmView();
 }
 
-function syncFarmChickens(canvas, count) {
-  count = Math.max(0, Math.min(MAX_FARM_CHICKENS, count || 0));
-  if (!farmChickenAnim) {
-    farmChickenAnim = { canvas:null, ctx:null, chickens:[], count:0, raf:0, lastTime:0, dpr:1 };
+function buildWalkingFarmAnimals() {
+  var counts = (save && save.farms) || {};
+  var walkingFarms = FARMS.filter(function(f) { return f.walk; });
+  var used = {};
+  var animals = [];
+  while (animals.length < MAX_FARM_ANIMALS) {
+    var added = false;
+    for (var i = 0; i < walkingFarms.length && animals.length < MAX_FARM_ANIMALS; i++) {
+      var farm = walkingFarms[i];
+      used[farm.key] = used[farm.key] || 0;
+      if ((counts[farm.key] || 0) <= used[farm.key]) continue;
+      used[farm.key]++;
+      animals.push({ key:farm.key, id:farm.key + '-' + used[farm.key] });
+      added = true;
+    }
+    if (!added) break;
   }
-  var anim = farmChickenAnim;
+  return animals;
+}
+
+function syncFarmAnimals(canvas) {
+  var desired = buildWalkingFarmAnimals();
+  if (!farmAnimalAnim) {
+    farmAnimalAnim = { canvas:null, ctx:null, animals:[], count:0, raf:0, lastTime:0, dpr:1 };
+  }
+  var anim = farmAnimalAnim;
   anim.canvas = canvas;
   anim.ctx = canvas.getContext('2d');
-  anim.count = count;
-  resizeChickenCanvas(anim);
+  resizeAnimalCanvas(anim);
   var canvasWidth = anim.canvas.width / (anim.dpr || 1);
-  while (anim.chickens.length < count) {
-    var idx = anim.chickens.length;
-    var spread = count > 1 ? idx / (count - 1) : 0.5;
-    anim.chickens.push({
-      x: 18 + spread * Math.max(24, canvasWidth - 52),
+  var previous = {};
+  anim.animals.forEach(function(animal) { previous[animal.id] = animal; });
+  anim.animals = desired.map(function(item, idx) {
+    var spread = desired.length > 1 ? idx / (desired.length - 1) : 0.5;
+    var existing = previous[item.id] || {};
+    return {
+      id: item.id,
+      key: item.key,
+      x: typeof existing.x === 'number' ? existing.x : 18 + spread * Math.max(24, canvasWidth - 52),
       lane: idx,
-      laneOffset: ((idx * 17) % 29) - 14,
-      dir: idx % 2 === 0 ? 1 : -1,
-      speed: 14 + (idx % 5) * 3,
+      laneOffset: ((idx * 17) % 25) - 12,
+      dir: existing.dir || (idx % 2 === 0 ? 1 : -1),
+      speed: existing.speed || 14 + (idx % 5) * 3,
       stepSeed: idx * 0.45
-    });
-  }
-  anim.chickens.length = count;
-  if (count === 0) {
-    clearChickenCanvas(anim);
+    };
+  });
+  anim.count = anim.animals.length;
+  if (anim.count === 0) {
+    clearAnimalCanvas(anim);
     if (anim.raf) cancelAnimationFrame(anim.raf);
     anim.raf = 0;
     anim.lastTime = 0;
@@ -1702,11 +1862,11 @@ function syncFarmChickens(canvas, count) {
   }
   if (!anim.raf) {
     anim.lastTime = 0;
-    updateFarmChickens(performance.now());
+    updateFarmAnimals(performance.now());
   }
 }
 
-function resizeChickenCanvas(anim) {
+function resizeAnimalCanvas(anim) {
   if (!anim || !anim.canvas) return;
   var rect = anim.canvas.getBoundingClientRect();
   var hostRect = anim.canvas.parentElement ? anim.canvas.parentElement.getBoundingClientRect() : rect;
@@ -1722,98 +1882,140 @@ function resizeChickenCanvas(anim) {
   anim.dpr = dpr;
 }
 
-function clearChickenCanvas(anim) {
+function clearAnimalCanvas(anim) {
   if (anim && anim.ctx && anim.canvas) anim.ctx.clearRect(0, 0, anim.canvas.width, anim.canvas.height);
 }
 
-function updateFarmChickens(time) {
-  var anim = farmChickenAnim;
+function updateFarmAnimals(time) {
+  var anim = farmAnimalAnim;
   if (!anim || !anim.canvas || !anim.canvas.isConnected || anim.count <= 0) {
     if (anim) { anim.raf = 0; anim.lastTime = 0; }
     return;
   }
-  resizeChickenCanvas(anim);
+  resizeAnimalCanvas(anim);
   var dpr = anim.dpr || 1;
   var width = anim.canvas.width / dpr;
   var height = anim.canvas.height / dpr;
   var dt = anim.lastTime ? Math.min(0.05, (time - anim.lastTime) / 1000) : 0;
   anim.lastTime = time;
-  clearChickenCanvas(anim);
+  clearAnimalCanvas(anim);
   anim.ctx.save();
   anim.ctx.scale(dpr, dpr);
   anim.ctx.imageSmoothingEnabled = false;
-  for (var i = 0; i < anim.chickens.length; i++) {
-    var chicken = anim.chickens[i];
+  var speedMult = 1 + ((save && save.animalSpeedBonus) || 0);
+  var drawList = anim.animals.slice();
+  for (var i = 0; i < drawList.length; i++) {
+    var animal = drawList[i];
     var minX = 12;
     var maxX = Math.max(minX + 24, width - 34);
-    chicken.x += chicken.dir * chicken.speed * dt;
-    if (chicken.x >= maxX) { chicken.x = maxX; chicken.dir = -1; }
-    if (chicken.x <= minX) { chicken.x = minX; chicken.dir = 1; }
-    var frame = Math.floor((time / 260) + chicken.stepSeed) % 2;
+    animal.x += animal.dir * animal.speed * speedMult * dt;
+    if (animal.x >= maxX) { animal.x = maxX; animal.dir = -1; }
+    if (animal.x <= minX) { animal.x = minX; animal.dir = 1; }
+    animal.drawY = Math.max(32, height - 38 - (animal.lane % 4) * 9 + animal.laneOffset);
+  }
+  drawList.sort(function(a, b) { return a.drawY - b.drawY; });
+  for (var j = 0; j < drawList.length; j++) {
+    var item = drawList[j];
+    var frame = Math.floor((time / 260) + item.stepSeed) % 2;
     var bob = frame === 0 ? 0 : -1;
-    var y = Math.max(28, height - 38 - (chicken.lane % 3) * 8 + chicken.laneOffset) + bob;
-    drawChickenSprite(anim.ctx, Math.round(chicken.x), Math.round(y), chicken.dir, frame);
+    drawFarmAnimalSprite(anim.ctx, item.key, Math.round(item.x), Math.round(item.drawY + bob), item.dir, frame);
   }
   anim.ctx.restore();
-  anim.raf = requestAnimationFrame(updateFarmChickens);
+  anim.raf = requestAnimationFrame(updateFarmAnimals);
 }
 
-function drawChickenSprite(ctx, x, y, dir, frame) {
+function fillPixelRects(ctx, color, rects) {
+  ctx.fillStyle = color;
+  for (var i = 0; i < rects.length; i++) {
+    var r = rects[i];
+    ctx.fillRect(r[0], r[1], r[2], r[3]);
+  }
+}
+
+function drawFarmAnimalSprite(ctx, key, x, y, dir, frame) {
   ctx.save();
   ctx.translate(x, y);
   if (dir < 0) ctx.scale(-1, 1);
+  ctx.translate(-12, -22);
+  if (key === 'cow') drawCowSprite(ctx, frame);
+  else if (key === 'pig') drawPigSprite(ctx, frame);
+  else if (key === 'sheep') drawSheepSprite(ctx, frame);
+  else if (key === 'dog') drawDogSprite(ctx, frame);
+  else if (key === 'horse') drawHorseSprite(ctx, frame, false);
+  else if (key === 'ranch') drawHorseSprite(ctx, frame, true);
+  else drawChickenSprite(ctx, frame);
+  ctx.restore();
+}
+
+function drawChickenSprite(ctx, frame) {
   ctx.fillStyle = '#fff7df';
-  ctx.fillRect(-8, -9, 13, 10);
-  ctx.fillRect(-4, -13, 9, 8);
+  ctx.fillRect(5, 8, 13, 10);
+  ctx.fillRect(9, 4, 9, 8);
   ctx.fillStyle = '#e33b35';
-  ctx.fillRect(-2, -16, 3, 3);
-  ctx.fillRect(1, -15, 3, 3);
+  ctx.fillRect(11, 1, 3, 3);
+  ctx.fillRect(14, 2, 3, 3);
   ctx.fillStyle = '#ffd34d';
-  ctx.fillRect(5, -11, 4, 3);
+  ctx.fillRect(18, 6, 4, 3);
   ctx.fillStyle = '#111';
-  ctx.fillRect(2, -11, 2, 2);
+  ctx.fillRect(15, 6, 2, 2);
   ctx.fillStyle = '#f0e4c4';
-  ctx.fillRect(-6, -7, 5, 5);
+  ctx.fillRect(7, 10, 5, 5);
   ctx.fillStyle = '#f5a623';
   if (frame === 0) {
-    ctx.fillRect(-4, 1, 2, 5);
-    ctx.fillRect(2, 1, 2, 4);
+    ctx.fillRect(9, 18, 2, 5);
+    ctx.fillRect(15, 18, 2, 4);
   } else {
-    ctx.fillRect(-5, 1, 2, 4);
-    ctx.fillRect(3, 1, 2, 5);
+    ctx.fillRect(8, 18, 2, 4);
+    ctx.fillRect(16, 18, 2, 5);
   }
-  ctx.restore();
+}
+
+function drawCowSprite(ctx, frame) {
+  fillPixelRects(ctx, '#f7f7f0', [[3,7,14,10],[14,4,7,7]]);
+  fillPixelRects(ctx, '#111', [[6,9,4,4],[12,13,4,3],[17,6,2,2]]);
+  fillPixelRects(ctx, '#d8c58c', [[15,2,2,3],[20,2,2,3]]);
+  fillPixelRects(ctx, '#f0c8a4', [[19,9,4,3]]);
+  fillPixelRects(ctx, '#222', frame === 0 ? [[6,17,2,5],[14,17,2,4]] : [[5,17,2,4],[15,17,2,5]]);
+}
+
+function drawPigSprite(ctx, frame) {
+  fillPixelRects(ctx, '#ff9fc0', [[3,9,14,8],[13,6,8,7]]);
+  fillPixelRects(ctx, '#ff7aa8', [[18,10,5,3],[0,10,3,2]]);
+  fillPixelRects(ctx, '#111', [[17,8,2,2]]);
+  fillPixelRects(ctx, '#d94f82', [[20,11,1,1],[22,11,1,1],[1,8,2,2],[0,7,1,1]]);
+  fillPixelRects(ctx, '#a84c63', frame === 0 ? [[6,17,2,4],[14,17,2,5]] : [[5,17,2,5],[15,17,2,4]]);
+}
+
+function drawSheepSprite(ctx, frame) {
+  fillPixelRects(ctx, '#fff8e8', [[3,8,4,4],[6,6,5,5],[10,7,5,4],[14,8,4,5],[5,11,13,6]]);
+  fillPixelRects(ctx, '#1d1d1d', [[16,6,5,6],[18,8,2,2]]);
+  fillPixelRects(ctx, '#111', frame === 0 ? [[7,17,2,5],[14,17,2,4]] : [[6,17,2,4],[15,17,2,5]]);
+}
+
+function drawDogSprite(ctx, frame) {
+  fillPixelRects(ctx, '#9a5b2e', [[4,9,13,8],[14,6,6,6],[2,8,3,3]]);
+  fillPixelRects(ctx, '#6b351c', [[13,5,3,6],[18,7,3,5],[1,6,2,3]]);
+  fillPixelRects(ctx, '#111', [[17,8,2,2]]);
+  fillPixelRects(ctx, '#7b3f20', frame === 0 ? [[6,17,2,5],[14,17,2,4]] : [[5,17,2,4],[15,17,2,5]]);
+}
+
+function drawHorseSprite(ctx, frame, saddle) {
+  fillPixelRects(ctx, '#8b4f25', [[3,9,14,8],[14,5,6,8]]);
+  fillPixelRects(ctx, '#4b2614', [[12,5,3,7],[1,8,3,6],[18,12,4,2]]);
+  fillPixelRects(ctx, '#111', [[18,7,2,2]]);
+  if (saddle) fillPixelRects(ctx, '#d23b3b', [[8,8,6,4], [9,7,4,1]]);
+  fillPixelRects(ctx, '#5b3018', frame === 0 ? [[6,17,2,5],[14,17,2,4],[17,17,2,5]] : [[5,17,2,4],[13,17,2,5],[18,17,2,4]]);
 }
 
 function renderFarmView() {
   var panel = document.getElementById('farm-landscape');
   if (!panel) return;
   var counts = (save && save.farms) || {};
-  var scene = [
-    { key:'chicken', emoji:'🐔', name:'Chick Coop', walk:true },
-    { key:'cow', emoji:'🐄', name:'Milky Cow', walk:true },
-    { key:'pig', emoji:'🐖', name:'Pig Pen', walk:true },
-    { key:'sheep', emoji:'🐑', name:'Sheep Fold', walk:true },
-    { key:'dog', emoji:'🐕', name:'Farm Dog', walk:true },
-    { key:'barn', emoji:'🏠', name:'Barn' },
-    { key:'pig', emoji:'🐖', name:'Pig Pen', walk:true },
-    { key:'sheep', emoji:'🐑', name:'Sheep Fold', walk:true },
-    { key:'dog', emoji:'🐕', name:'Farm Dog', walk:true },
-    { key:'barn', emoji:'🏠', name:'Barn' },
-    { key:'garden', emoji:'🌺', name:'Garden' },
-    { key:'orchard', emoji:'🥭', name:'Orchard' },
-    { key:'pond', emoji:'🐸', name:'Pond' },
-    { key:'mill', emoji:'🌬️', name:'Mill' },
-    { key:'temple', emoji:'🏯', name:'Temple' },
-    { key:'ranch', emoji:'🐂', name:'Ranch', walk:true },
-    { key:'horse', emoji:'🐎', name:'Pasture Horse', walk:true },
-    { key:'arena', emoji:'🎪', name:'Arena' },
-    { key:'kingdom', emoji:'👑', name:'Kingdom' }
-  ];
+  var scene = FARMS;
   var nextState = scene.map(function(item) { return item.key + ':' + (counts[item.key] || 0); }).join('|');
-  var existingChickenLayer = panel.querySelector('.farm-chicken-layer');
-  if (farmLandscapeState === nextState && existingChickenLayer) {
-    syncFarmChickens(existingChickenLayer, counts.chicken || 0);
+  var existingAnimalLayer = panel.querySelector('.farm-animal-layer');
+  if (farmLandscapeState === nextState && existingAnimalLayer) {
+    syncFarmAnimals(existingAnimalLayer);
     return;
   }
   farmLandscapeState = nextState;
@@ -1827,12 +2029,12 @@ function renderFarmView() {
   var ground = document.createElement('div');
   ground.className = 'farm-ground';
   panel.appendChild(ground);
-  var chickenLayer = document.createElement('canvas');
-  chickenLayer.className = 'farm-chicken-layer';
-  chickenLayer.setAttribute('aria-hidden', 'true');
-  panel.appendChild(chickenLayer);
+  var animalLayer = document.createElement('canvas');
+  animalLayer.className = 'farm-animal-layer';
+  animalLayer.setAttribute('aria-hidden', 'true');
+  panel.appendChild(animalLayer);
   requestAnimationFrame(function() {
-    if (chickenLayer.isConnected) syncFarmChickens(chickenLayer, counts.chicken || 0);
+    if (animalLayer.isConnected) syncFarmAnimals(animalLayer);
   });
   scene.forEach(function(item) {
     var owned = counts[item.key] || 0;
@@ -1845,10 +2047,10 @@ function renderFarmView() {
     node.addEventListener('click', function(e) {
       e.preventDefault();
       e.stopPropagation();
-      var currentOwned = (save && save.farms && save.farms[item.key]) || 0;
-      var currentCost = farmCost(item);
       var f = FARMS.find(function(x) { return x.key === item.key; });
       if (!f) return;
+      var currentOwned = (save && save.farms && save.farms[f.key]) || 0;
+      var currentCost = farmCost(f);
       openFarmTooltip(node, f, currentOwned, currentCost);
     });
     node.setAttribute('tabindex', '0');
@@ -1856,10 +2058,10 @@ function renderFarmView() {
       if (!e || !e.key) return;
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
-        var currentOwned = (save && save.farms && save.farms[item.key]) || 0;
-        var currentCost = farmCost(item);
         var f = FARMS.find(function(x) { return x.key === item.key; });
         if (!f) return;
+        var currentOwned = (save && save.farms && save.farms[f.key]) || 0;
+        var currentCost = farmCost(f);
         openFarmTooltip(node, f, currentOwned, currentCost);
         panel.focus();
       }
