@@ -1,0 +1,14 @@
+"appbuild"
+{
+  "appid" "YOUR_STEAM_APP_ID"
+  "desc" "Toe-Kan Clicker alpha Linux build"
+  "buildoutput" "/absolute/path/to/steampipe/output"
+  "contentroot" "/absolute/path/to/this/project/dist/linux-unpacked"
+  "setlive" "alpha"
+  "preview" "0"
+  "local" ""
+  "depots"
+  {
+    "YOUR_LINUX_DEPOT_ID" "steam/depot_build_template.vdf"
+  }
+}
