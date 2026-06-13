@@ -143,6 +143,7 @@
   #farm-landscape .farm-zone-track::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:999px}
   #farm-landscape .farm-buildings-track{height:76px}
   #farm-landscape .farm-animals-track{height:76px}
+  #farm-landscape .farm-path-hint{display:none}
   #farm-landscape .farm-branch-layer{display:none}
   #farm-landscape .farm-tier-row{display:contents}
   #farm-landscape .farm-node{position:relative;flex:0 0 auto;min-width:86px;max-width:104px;height:68px;
@@ -158,9 +159,16 @@
   #farm-landscape .farm-node .count{font-size:11px;font-weight:800;line-height:1.15;text-align:center;color:rgba(255,255,255,.88)}
   #farm-landscape .farm-node .bonus,#farm-landscape .farm-node .tier-badge{display:none;font-size:9px;font-weight:800;line-height:1.15;text-align:center;color:rgba(100,255,180,.88)}
   #farm-landscape .farm-node .owned-mark{position:absolute;top:5px;right:7px;font-size:11px;color:#64ffb4;opacity:0}
-  #farm-landscape .farm-node.owned{background:rgba(100,255,180,.12);border-color:rgba(100,255,180,.5);box-shadow:0 0 0 1px rgba(100,255,180,.18) inset}
-  #farm-landscape .farm-node.owned .owned-mark{opacity:1}
-  #farm-landscape .farm-node.available:not(.owned){border-color:rgba(255,211,106,.36);box-shadow:0 0 14px rgba(255,211,106,.14)}
+  #farm-landscape .farm-node.locked{opacity:.45;filter:grayscale(.8);cursor:not-allowed;background:rgba(255,255,255,.035);border-color:rgba(255,255,255,.08);box-shadow:none}
+  #farm-landscape .farm-node.locked:hover{background:rgba(255,255,255,.035);border-color:rgba(255,255,255,.08);box-shadow:none;transform:none}
+  #farm-landscape .farm-node.owned{background:rgba(100,255,180,.14);border-color:rgba(100,255,180,.82);box-shadow:0 0 0 1px rgba(100,255,180,.34) inset,0 0 18px rgba(100,255,180,.22)}
+  #farm-landscape .farm-node.owned .owned-mark{opacity:1;animation:ownedPulse 1.6s ease-in-out infinite}
+  @keyframes ownedPulse{0%,100%{transform:scale(1);filter:brightness(1)}50%{transform:scale(1.18);filter:brightness(1.35)}}
+  #farm-landscape .farm-node.available:not(.owned){border-color:rgba(255,211,106,.42);box-shadow:0 0 14px rgba(255,211,106,.14)}
+  #farm-landscape .farm-node.recommended{border-color:rgba(190,255,210,.58);box-shadow:0 0 0 1px rgba(100,255,180,.18) inset,0 0 14px rgba(100,255,180,.2)}
+  #farm-landscape .farm-node.locked.recommended{border-color:rgba(190,255,210,.28);box-shadow:0 0 10px rgba(100,255,180,.1)}
+  #farm-landscape .farm-node.recommended-next{border-color:rgba(255,255,255,.92);box-shadow:0 0 0 2px rgba(100,255,180,.36) inset,0 0 24px rgba(100,255,180,.55),0 0 10px rgba(255,255,255,.28);animation:nextFarmGlow 1.15s ease-in-out infinite}
+  @keyframes nextFarmGlow{0%,100%{filter:brightness(1)}50%{filter:brightness(1.32)}}
   #farm-landscape .farm-node.coop-building{box-shadow:0 0 0 1px rgba(100,255,180,.18) inset}
   #farm-landscape .farm-node .farm-sprite-preview{width:32px;height:28px;image-rendering:pixelated}
   #farm-landscape .farm-tooltip{position:absolute;z-index:4;min-width:172px;max-width:220px;padding:10px;
@@ -173,11 +181,16 @@
   #farm-landscape .farm-tooltip button{font-family:'Courier New',monospace;font-size:10px;font-weight:900;padding:6px 8px;border-radius:8px;
     border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.12);color:#fff;cursor:pointer}
   #farm-landscape .farm-tooltip button:hover{background:rgba(255,255,255,.18)}
+  #farm-landscape .farm-tooltip button:disabled{opacity:.6;cursor:not-allowed}
+  #farm-landscape .farm-tooltip button:disabled:hover{background:rgba(255,255,255,.12)}
   #farm-landscape .farm-tooltip button.buy-flash{animation:buyFlash .22s ease}
   #farm-landscape .farm-tooltip .tt-close{margin-left:auto}
   #farm-landscape.farm-expanded{bottom:calc(var(--hud-height, 130px) + 16px);height:min(480px,72vh);padding:12px 16px 14px}
-  #farm-landscape.farm-expanded .farm-tree{height:calc(100% - 18px);display:grid;grid-template-rows:minmax(0,1fr) 126px;grid-template-columns:1fr;gap:14px;padding-bottom:68px}
-  #farm-landscape.farm-expanded .farm-zone{overflow:visible}
+  #farm-landscape.farm-expanded .farm-path-hint{display:block;position:relative;z-index:3;margin:-2px 0 8px;
+    font-size:10px;font-weight:800;line-height:1.25;color:rgba(255,255,255,.78);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #farm-landscape.farm-expanded .farm-path-hint strong{color:#64ffb4}
+  #farm-landscape.farm-expanded .farm-tree{height:calc(100% - 42px);display:grid;grid-template-rows:minmax(0,1fr) 126px;grid-template-columns:1fr;gap:14px;padding-bottom:68px}
+  #farm-landscape.farm-expanded .farm-zone{overflow:visible;z-index:2}
   #farm-landscape.farm-expanded .farm-zone-label{font-size:10px;margin-bottom:8px}
   #farm-landscape.farm-expanded .farm-buildings-track{height:100%;display:grid;grid-template-rows:repeat(3,minmax(96px,1fr));gap:24px;overflow:visible;padding:4px 8px 0}
   #farm-landscape.farm-expanded .farm-animals-track{height:106px;justify-content:center;gap:24px;overflow-x:auto;padding:0 8px 8px}
@@ -191,9 +204,10 @@
   #farm-landscape.farm-expanded .farm-node .label{font-size:12px}
   #farm-landscape.farm-expanded .farm-node .count{font-size:12px}
   #farm-landscape.farm-expanded .farm-node .bonus,#farm-landscape.farm-expanded .farm-node .tier-badge{display:block}
-  #farm-landscape.farm-expanded .farm-branch-layer{display:block;position:absolute;left:8px;right:8px;top:20px;bottom:0;z-index:1;pointer-events:none}
-  #farm-landscape .farm-branch{position:absolute;height:4px;transform-origin:0 50%;border-radius:999px;background:linear-gradient(90deg,rgba(255,255,255,.5),rgba(100,255,180,.95),rgba(255,255,255,.5));box-shadow:0 0 10px rgba(100,255,180,.34);opacity:.95}
-  #farm-landscape .farm-branch.owned{background:linear-gradient(90deg,rgba(255,255,255,.72),rgba(100,255,180,1),rgba(255,255,255,.72));box-shadow:0 0 14px rgba(100,255,180,.48)}
+  #farm-landscape.farm-expanded .farm-branch-layer{display:block;position:absolute;left:0;right:0;top:0;bottom:0;z-index:1;pointer-events:none}
+  #farm-landscape .farm-branch{position:absolute;height:4px;transform-origin:0 50%;border-radius:999px;background:linear-gradient(90deg,rgba(255,255,255,.6),rgba(150,255,190,.95),rgba(255,255,255,.6));box-shadow:0 0 12px rgba(100,255,180,.38);opacity:.96}
+  #farm-landscape .farm-branch.owned{background:linear-gradient(90deg,rgba(255,255,255,.82),rgba(100,255,180,1),rgba(255,255,255,.82));box-shadow:0 0 16px rgba(100,255,180,.55)}
+  #farm-landscape .farm-branch.recommended-next{height:5px;background:linear-gradient(90deg,rgba(255,255,255,.9),rgba(100,255,180,1),rgba(255,255,255,.9));box-shadow:0 0 18px rgba(100,255,180,.72)}
   #farm-landscape.farm-expanded .farm-animal-layer{height:64px}
   #farm-landscape.farm-expanded .farm-ground{height:58px}
   #farm-landscape.farm-tab-active{filter:brightness(1.08)}
@@ -284,7 +298,7 @@ function resize() {
 resize();
 window.addEventListener('resize', function() {
   resize();
-  requestAnimationFrame(updateFarmBranches);
+  scheduleFarmBranchUpdate();
 });
 
 // ---- State ----
@@ -1090,14 +1104,44 @@ function closeFarmTooltip() {
   if (tt) tt.classList.remove('show');
 }
 
+function withFarmTooltipButtonLock(tt, fn) {
+  if (!tt) return fn();
+  var buttons = Array.prototype.slice.call(tt.querySelectorAll('[data-buy-farm],[data-buy-max]'));
+  var previousStates = buttons.map(function(button) {
+    return { button: button, disabled: button.disabled };
+  });
+  buttons.forEach(function(button) {
+    button.disabled = true;
+  });
+  try {
+    return fn();
+  } finally {
+    setTimeout(function() {
+      previousStates.forEach(function(state) {
+        if (state.button && state.button.isConnected) state.button.disabled = state.disabled;
+      });
+    }, 300);
+  }
+}
+
+function getMaxAffordableFarmPurchases(f) {
+  if (!f) return 0;
+  var owned = save.farms[f.key] || 0;
+  var cost = Math.floor(f.cost * Math.pow(1.15, owned));
+  if (save.toes < cost) return 0;
+  var nextCost = Math.floor(f.cost * Math.pow(1.15, owned + 1));
+  return Math.max(1, Math.floor((save.toes - cost) / Math.max(1, nextCost)) + 1);
+}
+
 function openFarmTooltip(node, f, owned, cost) {
   var tt = document.getElementById('farm-tooltip');
   if (!tt) return;
   var buyIdx = FARMS.findIndex(function(x) { return x.key === f.key; });
+  var maxAffordable = getMaxAffordableFarmPurchases(f);
   tt.innerHTML = '' +
     '<div class="tt-name">' + f.name + '</div>' +
     '<div class="tt-meta">Owned: ' + owned + '<br>Next upgrade: ' + fmt(cost) + '<br>' + getFarmBonusText(f) + '</div>' +
-    '<div class="tt-actions"><button type="button" data-buy-farm="' + f.key + '">Buy</button><button type="button" class="tt-close">Close</button></div>';
+    '<div class="tt-actions"><button type="button" data-buy-farm="' + f.key + '">Buy</button><button type="button" data-buy-max="' + f.key + '"' + (maxAffordable > 0 ? '' : ' disabled') + '>Max</button><button type="button" class="tt-close">Close</button></div>';
   var panel = document.getElementById('farm-landscape');
   var rect = node.getBoundingClientRect();
   var host = panel.getBoundingClientRect();
@@ -1105,13 +1149,31 @@ function openFarmTooltip(node, f, owned, cost) {
   tt.style.top = Math.max(8, rect.top - host.top - 84) + 'px';
   tt.classList.add('show');
   var buyBtn = tt.querySelector('[data-buy-farm]');
+  var maxBtn = tt.querySelector('[data-buy-max]');
   if (buyBtn) {
     buyBtn.onclick = function(e) {
       e.stopPropagation();
       e.preventDefault();
-      buyBtn.classList.add('buy-flash');
-      if (buyIdx >= 0) buyFarm(buyIdx);
-      setTimeout(closeFarmTooltip, 120);
+      if (buyBtn.disabled) return;
+      withFarmTooltipButtonLock(tt, function() {
+        buyBtn.classList.add('buy-flash');
+        if (buyIdx < 0) return;
+        var result = buyFarm(buyIdx);
+        if (!result.ok) showToast(result.reason === 'locked' ? 'Locked' : 'Not enough toes');
+      });
+    };
+  }
+  if (maxBtn) {
+    maxBtn.onclick = function(e) {
+      e.stopPropagation();
+      e.preventDefault();
+      if (maxBtn.disabled) return;
+      withFarmTooltipButtonLock(tt, function() {
+        maxBtn.classList.add('buy-flash');
+        if (buyIdx < 0) return;
+        var result = buyFarm(buyIdx, { max: true });
+        if (!result.ok) showToast(result.reason === 'locked' ? 'Locked' : 'Not enough toes');
+      });
     };
   }
   var closeBtn = tt.querySelector('.tt-close');
@@ -1612,7 +1674,8 @@ function toggleFarmLandscape() {
   panel.classList.add('farm-tab-active');
   farmLandscapeState = '';
   renderFarmView();
-  requestAnimationFrame(updateFarmBranches);
+  scheduleFarmBranchUpdate();
+  setTimeout(scheduleFarmBranchUpdate, 220);
   setTimeout(function() {
     if (panel) panel.classList.remove('farm-tab-active');
   }, 180);
@@ -1709,10 +1772,7 @@ const FARM_BUILDING_ROWS = [
 const FARM_BUILDING_KEYS = FARM_BUILDING_ROWS.reduce(function(all, row) { return all.concat(row); }, []);
 const FARM_ANIMAL_KEYS = ['chicken','cow','pig','sheep','dog','horse','ranch'];
 const FARM_TREE_KEYS = FARM_BUILDING_KEYS.concat(FARM_ANIMAL_KEYS);
-const FARM_TREE_BRANCHES = [
-  ['arena','mill'], ['kingdom','temple'],
-  ['pond','barn'], ['mill','garden'], ['temple','orchard']
-];
+const FARM_RECOMMENDED_PATH = ['chicken','cow','pig','sheep','dog','barn','garden','orchard','pond','mill','temple','ranch','arena','kingdom'];
 const COW_PER_SEC_BONUS = 0.1;
 const PIG_CLICK_BONUS = 0.05;
 const DOG_CRIT_CHANCE = 0.03;
@@ -1801,16 +1861,24 @@ function flashFarmNode(key) {
   setTimeout(function() { node.classList.remove('buy-flash'); }, 320);
 }
 
-function buyFarm(idx) {
+function buyFarm(idx, options) {
+  options = options || {};
   var f = FARMS[idx];
-  if (!f || !isTierUnlocked(getTier(f.key))) return;
-  var cost = farmCost(f);
-  if (save.toes < cost) return;
+  if (!f || !isTierUnlocked(getTier(f.key))) return { ok:false, reason:'locked', count:0 };
+  var purchaseCount = options.max ? getMaxAffordableFarmPurchases(f) : 1;
+  if (purchaseCount <= 0) return { ok:false, reason:'funds', count:0 };
   var beforeClick = save.toePerClick * save.mult;
   var beforeSec = save.toePerSec * save.mult;
-  save.toes -= cost;
-  save.farms[f.key] = (save.farms[f.key] || 0) + 1;
-  addFarmXP(f.key, 25);
+  var bought = 0;
+  while (bought < purchaseCount) {
+    var cost = farmCost(f);
+    if (save.toes < cost) break;
+    save.toes -= cost;
+    save.farms[f.key] = (save.farms[f.key] || 0) + 1;
+    addFarmXP(f.key, 25);
+    bought++;
+  }
+  if (!bought) return { ok:false, reason:'funds', count:0 };
   checkFirstFarm();
   recalc();
   checkAchievements();
@@ -1819,13 +1887,16 @@ function buyFarm(idx) {
   requestAnimationFrame(function() { flashFarmNode(f.key); });
   var clickDelta = (save.toePerClick * save.mult) - beforeClick;
   var secDelta = (save.toePerSec * save.mult) - beforeSec;
-  showToast("Bought! " + f.name + ": +" + fmt(clickDelta) + " per click, +" + fmt(secDelta) + " /sec");
+  showToast((bought > 1 ? "Bought x" + bought + " " + f.name : "Bought! " + f.name) +
+    ": +" + fmt(clickDelta) + " per click, +" + fmt(secDelta) + " /sec");
   flashStat("toe-count");
   flashStat("click-power");
   flashStat("per-sec");
   saveGame();
+  closeFarmTooltip();
   var col = THEMES[currentTheme].particleColors[Math.floor(Math.random() * 8)];
   spawnBurst(window.innerWidth - 200, 300 + Math.random() * 200, col);
+  return { ok:true, reason:null, count:bought };
 }
 
 function updateHUD() {
@@ -2090,14 +2161,50 @@ function getVisibleFarmItems(keys) {
   });
 }
 
-function getFarmTreeScene() {
-  return getVisibleFarmItems(FARM_TREE_KEYS);
+function getFarmItems(keys) {
+  return keys.map(function(key) {
+    return FARMS.find(function(f) { return f.key === key; });
+  }).filter(Boolean);
 }
 
-function getFarmNodeClass(item, owned) {
+function getFarmTreeScene(expanded) {
+  return expanded ? getFarmItems(FARM_TREE_KEYS) : getVisibleFarmItems(FARM_TREE_KEYS);
+}
+
+function getRecommendedPathNames() {
+  return FARM_RECOMMENDED_PATH.map(function(key) {
+    var item = FARMS.find(function(f) { return f.key === key; });
+    return item ? item.name : key;
+  });
+}
+
+function getNextRecommendedFarmKey() {
+  for (var i = 0; i < FARM_RECOMMENDED_PATH.length; i++) {
+    var key = FARM_RECOMMENDED_PATH[i];
+    var item = FARMS.find(function(f) { return f.key === key; });
+    if (!item) continue;
+    var owned = (save && save.farms && save.farms[key]) || 0;
+    if (owned <= 0) return key;
+  }
+  return null;
+}
+
+function getRecommendedFarmBranches() {
+  var pairs = [];
+  for (var i = 0; i < FARM_RECOMMENDED_PATH.length - 1; i++) {
+    pairs.push([FARM_RECOMMENDED_PATH[i], FARM_RECOMMENDED_PATH[i + 1]]);
+  }
+  return pairs;
+}
+
+function getFarmNodeClass(item, owned, nextRecommendedKey) {
   var cls = 'farm-node';
-  if (owned > 0) cls += ' owned';
+  var unlocked = isTierUnlocked(getTier(item.key));
+  if (!unlocked) cls += ' locked';
+  else if (owned > 0) cls += ' owned';
   else cls += ' available';
+  if (FARM_RECOMMENDED_PATH.indexOf(item.key) >= 0) cls += ' recommended';
+  if (item.key === nextRecommendedKey) cls += ' recommended-next';
   if (item.key === 'chicken' && owned > 0) cls += ' coop-building';
   return cls;
 }
@@ -2129,27 +2236,29 @@ function updateFarmBranches() {
   var panel = document.getElementById('farm-landscape');
   if (!panel) return;
   var layer = panel.querySelector('.farm-branch-layer');
-  var zone = panel.querySelector('.farm-buildings-zone');
-  if (!layer || !zone) return;
+  var tree = panel.querySelector('.farm-tree');
+  if (!layer || !tree) return;
   layer.replaceChildren();
   if (!panel.classList.contains('farm-expanded')) return;
-  var zoneRect = zone.getBoundingClientRect();
-  FARM_TREE_BRANCHES.forEach(function(pair) {
+  var treeRect = tree.getBoundingClientRect();
+  var nextRecommendedKey = getNextRecommendedFarmKey();
+  getRecommendedFarmBranches().forEach(function(pair) {
     var parent = panel.querySelector('.farm-node[data-farm-key="' + pair[0] + '"]');
     var child = panel.querySelector('.farm-node[data-farm-key="' + pair[1] + '"]');
     if (!parent || !child) return;
     var a = parent.getBoundingClientRect();
     var b = child.getBoundingClientRect();
-    var x1 = a.left + a.width / 2 - zoneRect.left;
-    var y1 = a.top + a.height - zoneRect.top;
-    var x2 = b.left + b.width / 2 - zoneRect.left;
-    var y2 = b.top - zoneRect.top;
+    var x1 = a.left + a.width / 2 - treeRect.left;
+    var y1 = a.top + a.height - treeRect.top;
+    var x2 = b.left + b.width / 2 - treeRect.left;
+    var y2 = b.top - treeRect.top;
     var dx = x2 - x1;
     var dy = y2 - y1;
     var len = Math.sqrt(dx * dx + dy * dy);
     var line = document.createElement('div');
     var ownedPath = parent.classList.contains('owned') && child.classList.contains('owned');
     line.className = 'farm-branch' + (ownedPath ? ' owned' : '');
+    if (child.dataset.farmKey === nextRecommendedKey) line.className += ' recommended-next';
     line.style.left = x1 + 'px';
     line.style.top = y1 + 'px';
     line.style.width = len + 'px';
@@ -2158,10 +2267,20 @@ function updateFarmBranches() {
   });
 }
 
-function createFarmNode(item, counts, panel) {
+var farmBranchUpdateQueued = false;
+function scheduleFarmBranchUpdate() {
+  if (farmBranchUpdateQueued) return;
+  farmBranchUpdateQueued = true;
+  requestAnimationFrame(function() {
+    farmBranchUpdateQueued = false;
+    updateFarmBranches();
+  });
+}
+
+function createFarmNode(item, counts, panel, nextRecommendedKey) {
   var owned = counts[item.key] || 0;
   var node = document.createElement('div');
-  node.className = getFarmNodeClass(item, owned);
+  node.className = getFarmNodeClass(item, owned, nextRecommendedKey);
   node.dataset.farmKey = item.key;
   node.innerHTML = getFarmIconMarkup(item, owned) +
     '<div class="owned-mark">✓</div>' +
@@ -2174,23 +2293,24 @@ function createFarmNode(item, counts, panel) {
   return node;
 }
 
-function appendFarmZoneNode(track, item, counts, panel) {
+function appendFarmZoneNode(track, item, counts, panel, nextRecommendedKey) {
   if (!isFarmVisibleInLandscape(item)) return;
-  track.appendChild(createFarmNode(item, counts, panel));
+  track.appendChild(createFarmNode(item, counts, panel, nextRecommendedKey));
 }
 
 function renderFarmView() {
   var panel = document.getElementById('farm-landscape');
   if (!panel) return;
   var counts = (save && save.farms) || {};
-  var scene = getFarmTreeScene();
+  var expanded = panel.classList.contains('farm-expanded');
+  var scene = getFarmTreeScene(expanded);
+  var nextRecommendedKey = getNextRecommendedFarmKey() || '';
   var nextState = scene.map(function(item) {
     return item.key + ':' + (counts[item.key] || 0) + ':' + isTierUnlocked(getTier(item.key));
-  }).join('|');
+  }).join('|') + ':expanded=' + expanded + ':next=' + nextRecommendedKey;
   var existingAnimalLayer = panel.querySelector('.farm-animal-layer');
   if (farmLandscapeState === nextState && existingAnimalLayer) {
     syncFarmAnimals(existingAnimalLayer);
-    requestAnimationFrame(updateFarmBranches);
     return;
   }
   farmLandscapeState = nextState;
@@ -2199,6 +2319,10 @@ function renderFarmView() {
   title.className = 'farm-landscape-title';
   title.textContent = 'Farm Skill Tree';
   panel.appendChild(title);
+  var pathHint = document.createElement('div');
+  pathHint.className = 'farm-path-hint';
+  pathHint.innerHTML = '<strong>Recommended path:</strong> ' + getRecommendedPathNames().join(' → ');
+  panel.appendChild(pathHint);
   var ground = document.createElement('div');
   ground.className = 'farm-ground';
   panel.appendChild(ground);
@@ -2208,29 +2332,29 @@ function renderFarmView() {
   panel.appendChild(animalLayer);
   var tree = document.createElement('div');
   tree.className = 'farm-tree';
+  var branchLayer = document.createElement('div');
+  branchLayer.className = 'farm-branch-layer';
+  tree.appendChild(branchLayer);
   var buildingsZone = document.createElement('div');
   buildingsZone.className = 'farm-zone farm-buildings-zone';
   buildingsZone.innerHTML = '<div class="farm-zone-label">Buildings</div>';
-  var branchLayer = document.createElement('div');
-  branchLayer.className = 'farm-branch-layer';
-  buildingsZone.appendChild(branchLayer);
   var buildingsTrack = document.createElement('div');
   buildingsTrack.className = 'farm-zone-track farm-buildings-track';
-  if (panel.classList.contains('farm-expanded')) {
+  if (expanded) {
     FARM_BUILDING_ROWS.forEach(function(rowKeys) {
-      var visibleItems = getVisibleFarmItems(rowKeys);
+      var visibleItems = getFarmItems(rowKeys);
       if (visibleItems.length === 0) return;
       var row = document.createElement('div');
       var tier = getTier(visibleItems[0].key);
       row.className = 'farm-tier-row farm-tier-' + tier;
       visibleItems.forEach(function(item) {
-        row.appendChild(createFarmNode(item, counts, panel));
+        row.appendChild(createFarmNode(item, counts, panel, nextRecommendedKey));
       });
       buildingsTrack.appendChild(row);
     });
   } else {
     getVisibleFarmItems(FARM_BUILDING_KEYS).forEach(function(item) {
-      appendFarmZoneNode(buildingsTrack, item, counts, panel);
+      appendFarmZoneNode(buildingsTrack, item, counts, panel, nextRecommendedKey);
     });
   }
   buildingsZone.appendChild(buildingsTrack);
@@ -2240,8 +2364,10 @@ function renderFarmView() {
   animalsZone.innerHTML = '<div class="farm-zone-label">Animals</div>';
   var animalsTrack = document.createElement('div');
   animalsTrack.className = 'farm-zone-track farm-animals-track';
-  getVisibleFarmItems(FARM_ANIMAL_KEYS).forEach(function(item) {
-    appendFarmZoneNode(animalsTrack, item, counts, panel);
+  var animalItems = expanded ? getFarmItems(FARM_ANIMAL_KEYS) : getVisibleFarmItems(FARM_ANIMAL_KEYS);
+  animalItems.forEach(function(item) {
+    if (expanded) animalsTrack.appendChild(createFarmNode(item, counts, panel, nextRecommendedKey));
+    else appendFarmZoneNode(animalsTrack, item, counts, panel, nextRecommendedKey);
   });
   animalsZone.appendChild(animalsTrack);
   tree.appendChild(animalsZone);
@@ -2265,7 +2391,7 @@ function renderFarmView() {
   }
   requestAnimationFrame(function() {
     if (animalLayer.isConnected) syncFarmAnimals(animalLayer);
-    updateFarmBranches();
+    scheduleFarmBranchUpdate();
   });
 
   if (!panel._landscapeBound) {
@@ -2273,11 +2399,6 @@ function renderFarmView() {
     panel.addEventListener('click', function(e) {
       var closeBtn = e.target && e.target.classList && e.target.classList.contains('tt-close') ? e.target : null;
       if (closeBtn) { closeFarmTooltip(); return; }
-      var buyBtn = e.target && e.target.getAttribute && e.target.getAttribute('data-buy-farm');
-      if (buyBtn) {
-        var idx = FARMS.findIndex(function(f) { return f.key === buyBtn; });
-        if (idx >= 0) buyFarm(idx);
-      }
     });
   }
 }
